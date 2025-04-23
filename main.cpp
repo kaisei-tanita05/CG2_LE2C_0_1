@@ -198,6 +198,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		useAdapter = nullptr;
 	}
 
+
 	assert(useAdapter != nullptr);
 
 	ID3D12Device* device = nullptr;
@@ -229,6 +230,28 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	hr = device->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&commandQueue));
 
 	//コマンドキューの生成が上手くいかなかったので起動できない
+	assert(SUCCEEDED(hr));
+
+	IDXGIAdapter4* swapChain = nullptr;
+
+	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
+
+	swapChainDesc.Width = kClientWidth;//画面の幅。ウィンドウのクライアント領域を同じものにしておく
+	
+	swapChainDesc.Height = kClientHeight;//画面の高さ。ウィンドウのクライアント領域を同じものにしておく
+
+	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;//色の形式
+
+	swapChainDesc.SampleDesc.Count = 1;//マルチサンプルしない
+
+	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;//描画のターゲットとして利用する
+
+	swapChainDesc.BufferCount = 2;//ダブルバッファ
+
+	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;//モニタにうつしたら、中身を破棄
+
+	hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue, hwnd, &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(&swapChain));
+
 	assert(SUCCEEDED(hr));
 
 	//コマンドアロケーターを生成する
