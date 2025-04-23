@@ -222,6 +222,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(device != nullptr);
 	Log(logStream, "complete create D3D12Device!!!\n");
 
+	ID3D12CommandQueue* commandQueue = nullptr;
+
+	D3D12_COMMAND_QUEUE_DESC commandQueueDesc{};
+
+	hr = device->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&commandQueue));
+
+	//コマンドキューの生成が上手くいかなかったので起動できない
+	assert(SUCCEEDED(hr));
+
+	
+
 	//出力ウィンドウへの文字出力
 	Log(logStream, "Hello,DirectX!\n");
 	Log(logStream, ConvertString(std::format(L"clintSize:{},{}\n", kClientWidth, kClientHeight)));
