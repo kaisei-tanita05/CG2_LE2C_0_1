@@ -229,10 +229,26 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	hr = device->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&commandQueue));
 
-	//コマンドキューの生成が上手くいかなかったので起動できない
+
+	/*===========コマンドロケーター==========*/
+	//コマンドアロケーターを生成する
+	ID3D12CommandAllocator* commandAllocator = nullptr;
+
+	hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
+
+	//コマンドロケーターの生成が上手くいかなかったので起動できない
 	assert(SUCCEEDED(hr));
 
-	IDXGIAdapter4* swapChain = nullptr;
+	//コマンドリストを生成する
+	ID3D12GraphicsCommandList* commandList = nullptr;
+
+	hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, nullptr, IID_PPV_ARGS(&commandList));
+
+	//コマンドリストの生成がうまくいかなかったので起動できない
+	assert(SUCCEEDED(hr));
+
+
+	IDXGISwapChain4* swapChain = nullptr;
 
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
 
@@ -253,26 +269,63 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue, hwnd, &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(&swapChain));
 
 	assert(SUCCEEDED(hr));
+	
+	//ディスクリプタヒープの生成
+	ID3D12DescriptorHeap* rtvDescriptorHeap = nullptr;
 
-	//コマンドアロケーターを生成する
-	ID3D12CommandAllocator* commandAllocator = nullptr;
+	D3D12_DESCRIPTOR_HEAP_DESC rtvDescriptorHeapDesc{};
 
-	hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
+	rtvDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;//レンダーターゲットビュー用
 
-	//コマンドロケーターの生成が上手くいかなかったので起動できない
+	rtvDescriptorHeapDesc.NumDescriptors = 2;//ダブルバッファ用に2つ。多くても別に構わない
+
+	hr = device->CreateDescriptorHeap(&rtvDescriptorHeapDesc, IID_PPV_ARGS(&rtvDescriptorHeap));
+
+	//ディスクリプタヒープが作れなかったので起動できない
 	assert(SUCCEEDED(hr));
 
-	//コマンドリストを生成する
-	ID3D12CommandList* commandList = nullptr;
+	//SwapChainかからResourceを引っ張ってくる
+	ID3D12Resource* swapChainResources[2] = { nullptr };
 
-	hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, nullptr, IID_PPV_ARGS(&commandList));
+	hr = swapChain->GetBuffer(0, IID_PPV_ARGS(&swapChainResources[0]));
 
-	//コマンドリストの生成がうまくいかなかったので起動できない
+	//うまく取得出来なければ起動出来ない
 	assert(SUCCEEDED(hr));
+
+	hr = swapChain->GetBuffer(1, IID_PPV_ARGS(&swapChainResources[1]));
+
+	assert(SUCCEEDED(hr));
+
+	//RTVの指定
+	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
+
+	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;//出力結果をSRGBに変換して書き込む
+
+	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;//2dでテクスチャとして書き込む
+
+	//ディスクリプタの先頭を取得する
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
+
+	//まず1つ目を作る。1つ目は最初の所に作る。作る場所をこちらで指定して上げる必要がある。
+	rtvHandles[0] = rtvStartHandle;
+
+	device->CreateRenderTargetView(swapChainResources[0], &rtvDesc, rtvHandles[0]);
+
+	//2つ目のディスクリプトハンドルを得る(自分で)
+	rtvHandles[1].ptr = rtvHandles[0].ptr + device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+	//2つ目を作る
+	device->CreateRenderTargetView(swapChainResources[1], &rtvDesc, rtvHandles[1]);
+
+
+
 
 	//出力ウィンドウへの文字出力
 	Log(logStream, "Hello,DirectX!\n");
 	Log(logStream, ConvertString(std::format(L"clintSize:{},{}\n", kClientWidth, kClientHeight)));
+
 
 	MSG msg{};
 	//ウィンドウのxボタンが押されるまでループ
@@ -281,9 +334,36 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
-		}
-		else {
+		}else {
 			//ゲームの処理
+			//これから書き込むバックバッファのインデックスを取得
+		UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+
+		//描画先のRTVを設定する
+		commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, nullptr);
+
+		//指定した色で画面全体をクリアする
+		float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };//青っぽい色。RGBAの順
+		commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
+
+		//コマンドリストの内容を確定させる。全てのコマンドをつんでからcloseすること
+		hr = commandList->Close();
+		assert(SUCCEEDED(hr));
+		
+		//GPUにコマンドリストの実行を合わせる
+		ID3D12CommandList* commandLists[] = { commandList };
+		commandQueue->ExecuteCommandLists(1, commandLists);
+
+		//GPUとOSに画面の交換を行うように通知する
+		swapChain->Present(1, 0);
+
+		//次のフレーム用のコマンドリストを準備
+		hr = commandAllocator->Reset();
+		assert(SUCCEEDED(hr));
+
+		hr = commandList->Reset(commandAllocator, nullptr);
+		assert(SUCCEEDED(hr));
+
 		}
 	}
 
