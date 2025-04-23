@@ -231,7 +231,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//コマンドキューの生成が上手くいかなかったので起動できない
 	assert(SUCCEEDED(hr));
 
-	
+	//コマンドアロケーターを生成する
+	ID3D12CommandAllocator* commandAllocator = nullptr;
+
+	hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
+
+	//コマンドロケーターの生成が上手くいかなかったので起動できない
+	assert(SUCCEEDED(hr));
+
+	//コマンドリストを生成する
+	ID3D12CommandList* commandList = nullptr;
+
+	hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, nullptr, IID_PPV_ARGS(&commandList));
+
+	//コマンドリストの生成がうまくいかなかったので起動できない
+	assert(SUCCEEDED(hr));
 
 	//出力ウィンドウへの文字出力
 	Log(logStream, "Hello,DirectX!\n");
