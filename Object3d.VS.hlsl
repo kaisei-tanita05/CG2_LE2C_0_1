@@ -1,13 +1,16 @@
-//float4 main( float4 pos : POSITION ) : SV_POSITION
-//{	
-    
-//    return pos;
-//}
+struct TransformationMatrix
+{
+    float32_t4x4 WVP;
+};
 
-//struct TransformationMatrix
-//{
-//    float32_t4x4 WVP;
-//};
+ConstantBuffer<TransformationMatrix> gTransformationMatrix : register(b0);
+
+float4 main(float4 pos : POSITION) : SV_POSITION
+{
+    
+    return pos;
+}
+
 
 
 
@@ -25,7 +28,7 @@ VertexShaderOutput main(VertexShaderInput input)
 {
     VertexShaderOutput output;
     
-    output.position = input.position;
+    output.position = mul(input.position,gTransformationMatrix.WVP);
     return output;
 }
 
