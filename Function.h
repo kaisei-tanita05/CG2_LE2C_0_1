@@ -1,10 +1,11 @@
 #pragma once
-#include <Vector3.h>
+#include "Vector3.h"
 #include <math.h>
 #include <time.h>
 #define _USE_MATH_DEFINE
 #include "Matrix4x4.h"
-#include <Vector4.h>
+//#include <Novice.h>
+#include "Vector4.h"
 #include <assert.h>
 #include <cmath>
 #include <stdio.h>
@@ -46,7 +47,7 @@ public:
 	Matrix4x4 Transpose(const Matrix4x4& m);
 
 	// 6.単位行列の作成
-	Matrix4x4 MakeIdenity4x4();
+	Matrix4x4 MakeIdentity4x4();
 
 	// 1.平行移動行列
 	Matrix4x4 MakeTranslateMatrix(const Vector3& translate);
@@ -88,9 +89,9 @@ public:
 	/// <param name="y"></param>
 	/// <param name="matrix"></param>
 	/// <param name="label"></param>
-	void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix, const char* label);
+	/*void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix, const char* label);
 
-	void vectorScreenPrintf(int x, int y, const Vector3& vector, const char* label);
+	/*void vectorScreenPrintf(int x, int y, const Vector3& vector, const char* label);*/
 
 private:
 	// 結果の表示
