@@ -356,28 +356,7 @@ ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX::Scratc
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
 	commandList->ResourceBarrier(1, &barrier);
 	return intermediateResource;
-
-	////Meta情報を取得
-	//const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
-
-	////全MipMapについて
-	//for (size_t mipLevel = 0; mipLevel < metadata.mipLevels; ++mipLevel) {
-	//	//MipMapLevelを設定して各Imageを取得
-
-	//	const DirectX::Image* img = mipImages.GetImage(mipLevel, 0, 0);
-
-	//	//Textureに転送
-	//	HRESULT hr = texture->WriteToSubresource(
-	//		UINT(mipLevel),
-	//		nullptr,//全領域へコピー
-	//		img->pixels,//元データアドレス
-	//		UINT(img->rowPitch),//1ラインサイズ
-	//		UINT(img->slicePitch)//1枚サイズ
-	//	);
-	//	assert(SUCCEEDED(hr));
-	//}
 }
-
 
 ID3D12Resource* CreateDepthStencilTextureResource(ID3D12Device* device, int32_t width, int32_t height) {
 	D3D12_RESOURCE_DESC resourceDesc{};
@@ -403,9 +382,8 @@ ID3D12Resource* CreateDepthStencilTextureResource(ID3D12Device* device, int32_t 
 	depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;//フォーマット。Resourceと合わせる
 
 
+	//Resourceの生成
 	ID3D12Resource* resource = nullptr;
-
-
 	HRESULT hr = device->CreateCommittedResource(
 		&heapProperties,//Heapの設定
 		D3D12_HEAP_FLAG_NONE,//Heapの特殊な設定。特になし。
@@ -416,21 +394,12 @@ ID3D12Resource* CreateDepthStencilTextureResource(ID3D12Device* device, int32_t 
 
 	assert(SUCCEEDED(hr));
 
-	//DepthStencilStateの設定
-	D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
-
-	//Depthの機能を有効化する
-	depthStencilDesc.DepthEnable = true;
-
-	//書き込みします
-	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-
-	//比較関数はLessEqual。つまり、近ければ描画される
-	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	
 
 	return resource;
 
 }
+
 
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -854,6 +823,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	IDxcBlob* pixelShaderBlob = CompileShader(L"Object3D.PS.hlsl", L"ps_6_0", dxcUtils, dxcCompiler, includeHandler, logStream);
 	assert(pixelShaderBlob != nullptr);
 
+	//03_01の時に生成
+	//DepthStencilStateの設定
+	D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
+
+	//Depthの機能を有効化する
+	depthStencilDesc.DepthEnable = true;
+
+	//書き込みします
+	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+
+	//比較関数はLessEqual。つまり、近ければ描画される
+	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+
 	//PSOを生成
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
 
@@ -882,6 +864,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	graphicsPipelineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
 
+	//DepthStencilの設定
+	graphicsPipelineStateDesc.DepthStencilState = depthStencilDesc;
+	graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 	//実際に生成
 	ID3D12PipelineState* graphicsPipelineState = nullptr;
@@ -1022,8 +1007,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//DSVのヒープでディスクリプタの数は1。DSVはShader内で触るものではないので、ShaderVisibleはFlase
 	ID3D12DescriptorHeap* dsvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
+
 	//DSVの設定
-	dsvDesc.Format=D_FORMAT_D24_UNORM_S8_UINT;//Format。基本的にはResourceに合わせる
+	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
+	dsvDesc.Format=DXGI_FORMAT_D24_UNORM_S8_UINT;//Format。基本的にはResourceに合わせる
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;//2DTexture
 
 	//DSVHeapの先頭にDSVを作る
@@ -1239,6 +1226,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialResource->Release();
 	wvpResource->Release();
 	srvDescriptorHeap->Release();
+	dsvDescriptorHeap->Release();
 	textureResource->Release();
 	depthStencilResource->Release();
 	intermediateResource->Release();
