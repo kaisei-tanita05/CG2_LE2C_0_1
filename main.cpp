@@ -331,7 +331,7 @@ ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMe
 }
 
 [[nodiscard]]
-ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages,ID3D12Device*device,ID3D12GraphicsCommandList*commandList) {
+ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages, ID3D12Device* device, ID3D12GraphicsCommandList* commandList) {
 
 	std::vector<D3D12_SUBRESOURCE_DATA>subresources;
 
@@ -752,7 +752,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(SUCCEEDED(hr));
 
 
-	
+
 
 	//InputLayout
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[2] = {};
@@ -934,7 +934,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	ID3D12Resource* textureResource = CreateTextureResource(device, metadata);
 
-	ID3D12Resource*intermediateResource=UploadTextureData(textureResource,mipImages,device,commandList);
+	ID3D12Resource* intermediateResource = UploadTextureData(textureResource, mipImages, device, commandList);
 
 	//metaDataを基に設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
@@ -959,7 +959,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	device->CreateShaderResourceView(textureResource, &srvDesc, textureSrvHandleCPU);
 
 
-	
+
 
 	//ImGuiの初期化。詳細はさして重要ではない
 	IMGUI_CHECKVERSION();
