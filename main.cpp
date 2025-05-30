@@ -400,6 +400,9 @@ ID3D12Resource* CreateDepthStencilTextureResource(ID3D12Device* device, int32_t 
 
 }
 
+bool DepthFunc(float currZ, float prevZ) {
+	return currZ <= prevZ;
+}
 
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -835,6 +838,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//比較関数はLessEqual。つまり、近ければ描画される
 	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+
+	if (DepthFunc(currZ, prevZ)) {
+		//該当のピクセルを描画
+	}
+	else {
+		//該当のピクセルを描画しない
+	}
 
 	//PSOを生成
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
