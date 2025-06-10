@@ -1034,6 +1034,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
+	//Sphere用の頂点情報
+#pragma region sphere関係
+
+	//sphereの頂点位置
+	ID3D12Resource* transformationMatrixResourceSphere = CreateBufferResource(device, sizeof(VertexData) * 6);
+
+	//データを書き込む
+	Matrix4x4*transformationMatrixDataSphere=
+
+
 	//Sprite用の頂点リソースを作る
 	ID3D12Resource* vertexResourceSprite = CreateBufferResource(device, sizeof(VertexData) * 6);
 
