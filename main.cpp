@@ -106,6 +106,8 @@ std::wstring ConvertString(const std::string& str) {
 	return result;
 }
 
+
+
 std::string ConvertString(const std::wstring& str) {
 	if (str.empty()) {
 		return std::string();
