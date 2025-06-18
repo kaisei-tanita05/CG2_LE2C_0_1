@@ -420,6 +420,15 @@ D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descrip
 	return handleCPU;
 }
 
+D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index) 
+{
+	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
+
+
+	handleGPU.ptr += (descriptorSize * index);
+	return handleGPU;
+}
+
 #pragma endregion
 
 
@@ -432,8 +441,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 誰も補掟しなかった場合に(Unhandled),補掟する関数を登録
 	// main関数は始まってすぐに登録するといい
 	SetUnhandledExceptionFilter(ExportDump);
-
-
 
 #pragma region log
 
@@ -545,6 +552,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(useAdapter != nullptr);
 
 	ID3D12Device* device = nullptr;
+
+
+
 	// 昨日レベルとログ出力用の文字列
 	D3D_FEATURE_LEVEL featureLevels[] = {
 		D3D_FEATURE_LEVEL_12_2,D3D_FEATURE_LEVEL_12_1,D3D_FEATURE_LEVEL_12_0
@@ -657,6 +667,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D; // 2dテクスチャとして読み込む
 	// ディスクリプタの先頭を取得する。
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+
+#pragma region DescriptorSize
+
+	const uint32_t descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+	const uint32_t descriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+	const uint32_t descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
+	GetCPUDescriptorHandle(rtvDescriptorHeap, descriptorSizeRTV, 0);
+
+#pragma endregion
+
+
 	// RTVを2つ作るのでディスクリプタを2つ用意
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
 	// まず1つ目を作る。1つ目は最初の所に作る。つくる場所をこちらで指定して上げる必要がある
@@ -667,13 +691,51 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// ２つ目を作る
 	device->CreateRenderTargetView(swapChainResources[1], &rtvDesc, rtvHandles[1]);
 
+
+
+
+
+
+
+#pragma region DescriptorSize
+	//2枚目のTextureを読んで転送する
+	DirectX::ScratchImage mipImages2 = LoadTexture("resources/monsterBall.png");
+
+	const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
+
+	ID3D12Resource* textureResource2 = CreateTextureResource(device, metadata2);
+	ID3D12Resource* intermediateResource2 = UploadTextureData(textureResource2, mipImages2, device, commandList);
+
+
+	//2枚目のSRVを作る
+	//metaDataを基にSRVの設定
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2{};
+
+	srvDesc2.Format = metadata2.format;
+	srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;//2Dテクスチャー
+	srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
+
+
+	//index=2の位置にDescriptorHeapを生成する
+	//SRVを作成するDescriptorHeapの場所を決める
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2);
+
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2);
+
+	//SRVを生成
+	device->CreateShaderResourceView(textureResource2, &srvDesc2, textureSrvHandleCPU2);
+#pragma endregion
+
+
+
+
+
 	// Textrueを読んで転送する
 	DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
 	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
 	ID3D12Resource* textrueResource = CreateTextureResource(device, metadata);
 	ID3D12Resource* intermediateResource = UploadTextureData(textrueResource, mipImages, device, commandList);
-	// DepthStencilTextureをウィンドウのサイズで作成
-	ID3D12Resource* deptStencilResource = CreateDepthStencilTextureResource(device, kClientWidth, kClientHeight);
 
 	// metaDataを基にSRVの設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
@@ -692,6 +754,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	device->CreateShaderResourceView(textrueResource, &srvDesc, textureSrvHandleCPU);
 
 	// DSVの設定
+
+	// DepthStencilTextureをウィンドウのサイズで作成
+	ID3D12Resource* deptStencilResource = CreateDepthStencilTextureResource(device, kClientWidth, kClientHeight);
 	D3D12_DEPTH_STENCIL_VIEW_DESC devDesc{};
 	devDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // Format。基本的にはResourceに合わせる
 	devDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D; //2dTexture
@@ -1145,15 +1210,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
 		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
-
 #pragma endregion
 
-
-
-
-
-
-
+	bool useMonsterBall = false;
 
 	MSG msg{};
 
@@ -1213,8 +1272,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 worldViewProjectionMatrixSprite = Multipty(worldMatrixSprite, Multipty(viewMatrixSprite, projectionMatrixSprite));
 			*transformationMatirxDataSprite = worldViewProjectionMatrixSprite;
 
-
-
 			ImGui::Begin("Settings");
 
 			ImGui::ColorEdit4("Color", &materialDara->x);
@@ -1223,7 +1280,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::SliderAngle("RotateZ", &transformSprite.rotate.z, -500, 500);
 			ImGui::DragFloat3("transform", &transformSprite.translate.x, -180, 180);
 			ImGui::DragFloat3("transformsphere", &transform.translate.x);
-
+			ImGui::Checkbox("useMonsterBall", &useMonsterBall);
 
 
 
@@ -1263,8 +1320,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// wvp用のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
-			// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である
-			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+
+			commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
 			// 描画！(DraoCall/ドローコール)。3頂点で1つのインスタンス。インスタンスについては今後
 			commandList->DrawInstanced(sphereVertexNum, 1, 0, 0);
 
@@ -1273,9 +1330,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
 			// 描画！(DraoCall/ドローコール)
 			commandList->DrawInstanced(6, 1, 0, 0);
-
-
-
 
 
 
@@ -1371,6 +1425,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexResourceSprite->Release();
 	transformationMatrixResourceSprite->Release();
 	vertexResourceSphere->Release();
+	textureResource2->Release();
+	intermediateResource2->Release();
 	//transformationMatrixResourceSphere->Release();
 
 #ifdef _DEBUG
