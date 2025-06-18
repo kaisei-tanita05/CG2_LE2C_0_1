@@ -49,6 +49,7 @@ struct Vector4 {
 struct VertexData {
 	Vector4 position;
 	Vector2 texcoord;
+	Vector3 normal;
 };
 
 struct Transform {
@@ -61,6 +62,12 @@ Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 Transform cameraTransfrom{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
 Transform transformSprite{ {1.0f,1.0f,1.0f,},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
+
+struct Material 
+{
+	Vector4 color;
+	int32_t enableLighting;
+};
 
 
 #pragma region Creash関数
@@ -874,20 +881,27 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(SUCCEEDED(hr));
 
 	// InputLayout
-	D3D12_INPUT_ELEMENT_DESC inputElementDescs[2] = {};
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
 	inputElementDescs[0].SemanticName = "POSITION";
 	inputElementDescs[0].SemanticIndex = 0;
 	inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	inputElementDescs[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+
 	inputElementDescs[1].SemanticName = "TEXCOORD";
 	inputElementDescs[1].SemanticIndex = 0;
 	inputElementDescs[1].Format = DXGI_FORMAT_R32G32_FLOAT;
 	inputElementDescs[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+
+	inputElementDescs[2].SemanticName = "NORMAL";
+	inputElementDescs[2].SemanticIndex = 0;
+	inputElementDescs[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	inputElementDescs[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
 	inputLayoutDesc.pInputElementDescs = inputElementDescs;
 	inputLayoutDesc.NumElements = _countof(inputElementDescs);
 
-	// BlendStateの設定
+	// BlendStateの
 	D3D12_BLEND_DESC blendDesc{};
 	// 全ての色要素を書き込む
 	blendDesc.RenderTarget[0].RenderTargetWriteMask =
@@ -1118,22 +1132,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			vertexDataSphere[start + 3] = vertC;
 			vertexDataSphere[start + 4] = vertB;
 			vertexDataSphere[start + 5] = vertD;
+
+			vertexDataSprite[0].normal = { 0.0f,0.0f,-1.0f };
+
+			vertexDataSphere[start].normal.x = vertexDataSphere[start].position.x;
+			vertexDataSphere[start].normal.y = vertexDataSphere[start].position.y;
+			vertexDataSphere[start].normal.z = vertexDataSphere[start].position.z;
+
 		}
-
-
-
-
 
 	}
 
 
-
-
-
-
 #pragma endregion
-
-
 
 
 #pragma region ViewportとScissor
@@ -1165,11 +1176,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
 	ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(Vector4));
 	// マテリアルにデータを書き込む
-	Vector4* materialDara = nullptr;
+	Vector4* materialData = nullptr;
 	// 書き込むためのアドレスを取得
-	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialDara));
-	// 今回は赤を書き込んでいる
-	*materialDara = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
+	// 今回は白を書き込んでいる
+	*materialData = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
 
 #pragma endregion
@@ -1194,6 +1205,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 単位行列を書き込んでおく
 	*wvpData = MakeIdentity4x4();
 	*transformationMatirxDataSprite = MakeIdentity4x4();
+
+#pragma endregion
+
+#pragma region Sprite用のマテリアル
+
+	ID3D12Resource* materialResourceSprite = CreateBufferResource(device, sizeof(Material));
+
+	Material* materialSpriteData = nullptr;
+
+	materialResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&materialSpriteData));
+
+	*materialSpriteData = { 1.0f,1.0f,1.0f,1 };
+
+	//SpriteはLightingしないのでfalseを設定する
+	
+	materialSpriteData->enableLighting = false;
 
 #pragma endregion
 
@@ -1274,7 +1301,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			ImGui::Begin("Settings");
 
-			ImGui::ColorEdit4("Color", &materialDara->x);
+			ImGui::ColorEdit4("Color", &materialData->x);
 			ImGui::SliderAngle("RotateX", &transformSprite.rotate.x, -500, 500);
 			ImGui::SliderAngle("RotateY", &transformSprite.rotate.y, -500, 500);
 			ImGui::SliderAngle("RotateZ", &transformSprite.rotate.z, -500, 500);
@@ -1316,22 +1343,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 形状を設定。PSOに設定しているものとは別。同じものを設定すると考えておけば良い
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			// マテリアルCBuffer
-			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
 
 			// wvp用のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 
 			commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
+
+
 			// 描画！(DraoCall/ドローコール)。3頂点で1つのインスタンス。インスタンスについては今後
 			commandList->DrawInstanced(sphereVertexNum, 1, 0, 0);
+
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 
 			// Spriteの描画
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite); // VBVを設定
 			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
+
 			// 描画！(DraoCall/ドローコール)
 			commandList->DrawInstanced(6, 1, 0, 0);
-
-
 
 			// 実際のcommandListのImGuiの描画コマンドを積む
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
@@ -1427,6 +1457,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexResourceSphere->Release();
 	textureResource2->Release();
 	intermediateResource2->Release();
+	materialResourceSprite->Release();
 	//transformationMatrixResourceSphere->Release();
 
 #ifdef _DEBUG
