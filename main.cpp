@@ -63,23 +63,23 @@ Transform cameraTransfrom{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} 
 Transform transformSprite{ {1.0f,1.0f,1.0f,},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
 
-struct Material 
+struct Material
 {
 	Vector4 color;
 	int32_t enableLighting;
 };
 
 
-struct TransformationMatrix 
+struct TransformationMatrix
 {
 	Matrix4x4 WVP;
 
 	Matrix4x4 World;
 };
 
-struct DirectionalLight 
+struct DirectionalLight
 {
-	
+
 	Vector4 color;//!<ライトの色
 	Vector3 direction;//!<ライトの向き
 	float intensity;//!<輝度
@@ -434,7 +434,7 @@ ID3D12Resource* CreateDepthStencilTextureResource(ID3D12Device* device, int32_t 
 
 #pragma region DescriptorHandleの関数化
 
-D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index) 
+D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index)
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
@@ -443,7 +443,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descrip
 	return handleCPU;
 }
 
-D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index) 
+D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
 
@@ -883,7 +883,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	descriptionRootSignature.pStaticSamplers = staticSamplers;
 	descriptionRootSignature.NumStaticSamplers = _countof(staticSamplers);
 
-	
+
 
 
 	// シリアライズしてバイナリにする
@@ -1022,6 +1022,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 #pragma endregion
+
+	// Sprite用のTransformationMatirx用のリソースを作る。Matrix4x4 一つ分のサイズを用意する
+	ID3D12Resource* transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(Matrix4x4));
+	// データを書き込む
+	Matrix4x4* transformationMatirxDataSprite = nullptr;
+
+	// 書き込むためのアドレスを取得
+	transformationMatrixResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatirxDataSprite));
+
+	*transformationMatirxDataSprite = MakeIdentity4x4();
 
 #pragma region Spriteの実装
 
@@ -1199,37 +1209,33 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #pragma region Material用
 
 	// マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
-	ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(Vector4));
+	ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(Material));
 	// マテリアルにデータを書き込む
-	Vector4* materialData = nullptr;
+	Material* materialData = nullptr;
 	// 書き込むためのアドレスを取得
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 	// 今回は白を書き込んでいる
-	*materialData = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
+	materialData->enableLighting = true;
 
 #pragma endregion
 
 #pragma region WVP
 
 	// WVB用のリソースを作る。Matrix4x4 一つ分のサイズを用意する
-	ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(Matrix4x4));
-	// Sprite用のTransformationMatirx用のリソースを作る。Matrix4x4 一つ分のサイズを用意する
-	ID3D12Resource* transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(Matrix4x4));
+	ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(TransformationMatrix));
 
+	TransformationMatrix* wvpData = nullptr;
 
-
-	// データを書き込む
-	Matrix4x4* wvpData = nullptr;
-	Matrix4x4* transformationMatirxDataSprite = nullptr;
-
-	// 書き込むためのアドレスを取得
 	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
-	transformationMatrixResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatirxDataSprite));
+
 
 	// 単位行列を書き込んでおく
-	*wvpData = MakeIdentity4x4();
-	*transformationMatirxDataSprite = MakeIdentity4x4();
+	wvpData->WVP = MakeIdentity4x4();
+
+
+
 
 #pragma endregion
 
@@ -1241,10 +1247,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	materialResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&materialSpriteData));
 
-	*materialSpriteData = { 1.0f,1.0f,1.0f,1 };
+
+
+	*materialSpriteData = {};
+
+	materialSpriteData->color = Vector4{ 1.0f,1.0f,1.0f,1.0f };
+
+	materialSpriteData->enableLighting = 1;
 
 	//SpriteはLightingしないのでfalseを設定する
-	
+
 	materialSpriteData->enableLighting = false;
 
 #pragma endregion
@@ -1328,12 +1340,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 球描画
 			transform.rotate.y += 0.03f;
 			Matrix4x4 worldMatrix = MakeAffine(transform.scale, transform.rotate, transform.translate);
-			*wvpData = worldMatrix;
+			wvpData->World = worldMatrix;
 			Matrix4x4 cameraMatrix = MakeAffine(cameraTransfrom.scale, cameraTransfrom.rotate, cameraTransfrom.translate);
 			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 			Matrix4x4 projectionMatrix = PerspectiveFov(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
 			Matrix4x4 worldViewProjectionMatrix = Multipty(worldMatrix, Multipty(viewMatrix, projectionMatrix));
-			*wvpData = worldViewProjectionMatrix;
+			wvpData->WVP = worldViewProjectionMatrix;
 
 			// Sprite
 			Matrix4x4 worldMatrixSprite = MakeAffine(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
@@ -1344,7 +1356,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			ImGui::Begin("Settings");
 
-			ImGui::ColorEdit4("Color", &materialData->x);
+			ImGui::ColorEdit4("Color", &materialData->color.x);
 			ImGui::SliderAngle("RotateX", &transformSprite.rotate.x, -500, 500);
 			ImGui::SliderAngle("RotateY", &transformSprite.rotate.y, -500, 500);
 			ImGui::SliderAngle("RotateZ", &transformSprite.rotate.z, -500, 500);
@@ -1393,6 +1405,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
 
+			//平行光源用CBufferの場所を設定
+			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
 			// 描画！(DraoCall/ドローコール)。3頂点で1つのインスタンス。インスタンスについては今後
 			commandList->DrawInstanced(sphereVertexNum, 1, 0, 0);
