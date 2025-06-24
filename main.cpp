@@ -70,6 +70,22 @@ struct Material
 };
 
 
+struct TransformationMatrix 
+{
+	Matrix4x4 WVP;
+
+	Matrix4x4 World;
+};
+
+struct DirectionalLight 
+{
+	
+	Vector4 color;//!<ライトの色
+	Vector3 direction;//!<ライトの向き
+	float intensity;//!<輝度
+
+};
+
 #pragma region Creash関数
 static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception) {
 	// 時刻を取得して、時刻を名前に手に入れたファイルを作成。Dumpsディレクトリを以下に出力
@@ -618,6 +634,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #endif // _DEBUG
 
 
+
 #pragma region CommandList
 
 	// コマンドキューを生成する
@@ -832,17 +849,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 	// PootParameter作成。複数設定できるので配列。
-	D3D12_ROOT_PARAMETER rootParameters[3] = {};
+	D3D12_ROOT_PARAMETER rootParameters[4] = {};
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // CBVを使う
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; //PixelShaderで使う 
 	rootParameters[0].Descriptor.ShaderRegister = 0; //レジスタ番号0とバインド 
+
 	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // CBVを使う
 	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX; //VertexShaderで使う 
 	rootParameters[1].Descriptor.ShaderRegister = 0; //レジスタ番号0とバインド 
+
 	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE; //DescriptorTableを使う
 	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // PixelShaderで使う
 	rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange; // Tableの中身の配列を指定
 	rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange); // Tableで利用する数
+
+	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
+	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // PixelShaderで使う
+	rootParameters[3].Descriptor.ShaderRegister = 1; // レジスタ番号1を使う
+
 	descriptionRootSignature.pParameters = rootParameters; //ルートバラメータ配列へのポインタ
 	descriptionRootSignature.NumParameters = _countof(rootParameters); //配列の長さ
 
@@ -859,7 +883,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	descriptionRootSignature.pStaticSamplers = staticSamplers;
 	descriptionRootSignature.NumStaticSamplers = _countof(staticSamplers);
 
-
+	
 
 
 	// シリアライズしてバイナリにする
@@ -1133,11 +1157,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			vertexDataSphere[start + 4] = vertB;
 			vertexDataSphere[start + 5] = vertD;
 
-			vertexDataSprite[0].normal = { 0.0f,0.0f,-1.0f };
-
 			vertexDataSphere[start].normal.x = vertexDataSphere[start].position.x;
 			vertexDataSphere[start].normal.y = vertexDataSphere[start].position.y;
 			vertexDataSphere[start].normal.z = vertexDataSphere[start].position.z;
+
+			vertexDataSprite[start].normal = { 0.0f,0.0f,-1.0f };
+
 
 		}
 
@@ -1224,6 +1249,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 #pragma endregion
 
+#pragma region 平行光原
+
+	ID3D12Resource* directionalLightResource = CreateBufferResource(device, sizeof(DirectionalLight));
+
+	DirectionalLight* directionalLightData = nullptr;
+
+	directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
+
+	directionalLightData->color = { 1.0f,1.0f,1.0f,1.0f };
+
+	directionalLightData->direction = { 0.0f,-1.0f,0.0f };
+
+	directionalLightData->intensity = 1.0f;
+
+#pragma endregion
+
 #pragma region ImGuiの初期化
 
 	IMGUI_CHECKVERSION();
@@ -1240,6 +1281,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #pragma endregion
 
 	bool useMonsterBall = false;
+
+
 
 	MSG msg{};
 
@@ -1458,6 +1501,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	textureResource2->Release();
 	intermediateResource2->Release();
 	materialResourceSprite->Release();
+	directionalLightResource->Release();
 	//transformationMatrixResourceSphere->Release();
 
 #ifdef _DEBUG
