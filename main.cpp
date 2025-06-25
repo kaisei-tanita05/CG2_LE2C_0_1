@@ -1024,7 +1024,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #pragma endregion
 
 	// Sprite用のTransformationMatirx用のリソースを作る。Matrix4x4 一つ分のサイズを用意する
-	ID3D12Resource* transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(Matrix4x4));
+	ID3D12Resource* transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(TransformationMatrix));
 	// データを書き込む
 	Matrix4x4* transformationMatirxDataSprite = nullptr;
 
@@ -1116,47 +1116,37 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			float lon = lonIndex * kLonEvery;
 			// 頂点データを描く
 			//頂点A
-			VertexData vertA = {
-				{
-				std::cosf(lat) * std::cosf(lon),
-				std::sinf(lat),
-				std::cosf(lat) * std::sinf(lon),
-				1.0f},
-			{
-				float(lonIndex) / float(kSubdivision),
-					1.0f - float(latIndex) / float(kSubdivision)},
+			VertexData vertA = { {std::cosf(lat) * std::cosf(lon), std::sinf(lat),
+					 std::cosf(lat) * std::sinf(lon), 1.0f},
+					{float(lonIndex) / float(kSubdivision),
+					 1.0f - float(latIndex) / float(kSubdivision)},
+				{vertA.position.x, vertA.position.y,vertA.position.z }
 			};
 			//頂点B
 			VertexData vertB = {
-				{
-					std::cosf(lat + kLatEvery) * std::cosf(lon),
-					std::sinf(lat + kLatEvery),
-					std::cosf(lat + kLatEvery) * std::sinf(lon),
-					1.0f},
-				{
-					float(lonIndex) / float(kSubdivision),
-					1.0f - float(latIndex + 1.0f) / float(kSubdivision)}
-			};
+				{std::cosf(lat + kLatEvery) * std::cosf(lon),
+				 std::sinf(lat + kLatEvery),
+				 std::cosf(lat + kLatEvery) * std::sinf(lon), 1.0f},
+				{float(lonIndex) / float(kSubdivision),
+				 1.0f - float(latIndex + 1.0f) / float(kSubdivision)},
+				{ vertB.position.x, vertB.position.y, vertB.position.z } };
+
 			//頂点C
-			VertexData vertC = {
-				{
-					std::cosf(lat) * std::cosf(lon + kLonEvery),
-					std::sinf(lat),
-					std::cosf(lat) * std::sinf(lon + kLonEvery),
-					1.0f,},
-					 { float(lonIndex + 1) / float(kSubdivision),
-				1.0f - float(latIndex) / float(kSubdivision) }
-			};
-			//頂点D
+			VertexData vertC = { {std::cosf(lat) * std::cosf(lon + kLonEvery),
+								 std::sinf(lat),
+								 std::cosf(lat) * std::sinf(lon + kLonEvery), 1.0f},
+								{float(lonIndex + 1.0f) / float(kSubdivision),
+								 1.0f - float(latIndex) / float(kSubdivision)},
+				{ vertC.position.x, vertC.position.y, vertC.position.z } };
+
+
 			VertexData vertD = {
-				{
-					std::cosf(lat + kLatEvery) * std::cosf(lon + kLonEvery),
-					std::sinf(lat + kLatEvery),
-					std::cosf(lat + kLatEvery) * std::sinf(lon + kLonEvery),
-					1.0f,},
-					  { float(lonIndex + 1.0f) / float(kSubdivision),
-					  1.0f - float(latIndex + 1.0f) / float(kSubdivision) }
-			};
+				{std::cosf(lat + kLatEvery) * std::cosf(lon + kLonEvery),
+				 std::sinf(lat + kLatEvery),
+				 std::cosf(lat + kLatEvery) * std::sinf(lon + kLonEvery), 1.0f},
+				{float(lonIndex + 1.0f) / float(kSubdivision),
+				 1.0f - float(latIndex + 1.0f) / float(kSubdivision)},
+				{ vertD.position.x, vertD.position.y, vertD.position.z } };
 
 			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
 
@@ -1167,11 +1157,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			vertexDataSphere[start + 4] = vertB;
 			vertexDataSphere[start + 5] = vertD;
 
-			vertexDataSphere[start].normal.x = vertexDataSphere[start].position.x;
+		/*	vertexDataSphere[start].normal.x = vertexDataSphere[start].position.x;
 			vertexDataSphere[start].normal.y = vertexDataSphere[start].position.y;
 			vertexDataSphere[start].normal.z = vertexDataSphere[start].position.z;
 
-			vertexDataSprite[start].normal = { 0.0f,0.0f,-1.0f };
+			vertexDataSprite[start].normal = { 0.0f,0.0f,-1.0f };*/
 
 
 		}
@@ -1217,7 +1207,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 今回は白を書き込んでいる
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
-	materialData->enableLighting = true;
+	
 
 #pragma endregion
 
@@ -1253,11 +1243,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	materialSpriteData->color = Vector4{ 1.0f,1.0f,1.0f,1.0f };
 
-	materialSpriteData->enableLighting = 1;
-
 	//SpriteはLightingしないのでfalseを設定する
 
-	materialSpriteData->enableLighting = false;
+	materialSpriteData->enableLighting = true;
 
 #pragma endregion
 
@@ -1363,7 +1351,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::DragFloat3("transform", &transformSprite.translate.x, -180, 180);
 			ImGui::DragFloat3("transformsphere", &transform.translate.x);
 			ImGui::Checkbox("useMonsterBall", &useMonsterBall);
-
+			ImGui::SliderFloat3("Light", &directionalLightData->direction.x, -1.0f, 0.8f);
 
 
 			ImGui::End();
