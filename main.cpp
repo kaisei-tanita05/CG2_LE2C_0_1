@@ -111,6 +111,14 @@ static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception) {
 
 #pragma endregion
 
+Vector3 Normalize(const Vector3& v) {
+	float length = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+	if (length == 0.0f)
+		return { 0.0f, 0.0f, 0.0f };
+	return { v.x / length, v.y / length, v.z / length };
+}
+
+
 #pragma region log関数
 
 
@@ -1099,6 +1107,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexBufferViewSphere.StrideInBytes = sizeof(VertexData);
 
 	VertexData* vertexDataSphere = nullptr;
+
 	// 書き込むためのアドレス取得
 	vertexResourceSphere->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataSphere));
 
@@ -1207,7 +1216,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 今回は白を書き込んでいる
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
-	
+	materialData->enableLighting = true;
 
 #pragma endregion
 
@@ -1245,7 +1254,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//SpriteはLightingしないのでfalseを設定する
 
-	materialSpriteData->enableLighting = true;
+	materialSpriteData->enableLighting = false;
 
 #pragma endregion
 
@@ -1342,6 +1351,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 worldViewProjectionMatrixSprite = Multipty(worldMatrixSprite, Multipty(viewMatrixSprite, projectionMatrixSprite));
 			*transformationMatirxDataSprite = worldViewProjectionMatrixSprite;
 
+			bool temp_enableLightFlag = (materialData->enableLighting == 1);
+
+			directionalLightData->direction = Normalize(directionalLightData->direction);
+
 			ImGui::Begin("Settings");
 
 			ImGui::ColorEdit4("Color", &materialData->color.x);
@@ -1351,6 +1364,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::DragFloat3("transform", &transformSprite.translate.x, -180, 180);
 			ImGui::DragFloat3("transformsphere", &transform.translate.x);
 			ImGui::Checkbox("useMonsterBall", &useMonsterBall);
+			if (ImGui::Checkbox("enableLightFlag", &temp_enableLightFlag)) {
+				materialData->enableLighting = temp_enableLightFlag ? 1 : 0;
+			}
 			ImGui::SliderFloat3("Light", &directionalLightData->direction.x, -1.0f, 0.8f);
 
 
@@ -1385,24 +1401,26 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// 形状を設定。PSOに設定しているものとは別。同じものを設定すると考えておけば良い
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			// マテリアルCBuffer
-			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
+		
 
 			// wvp用のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
-
 			commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
-
+			// マテリアルCBuffer
+			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 			//平行光源用CBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
 			// 描画！(DraoCall/ドローコール)。3頂点で1つのインスタンス。インスタンスについては今後
 			commandList->DrawInstanced(sphereVertexNum, 1, 0, 0);
 
-			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			
 
 			// Spriteの描画
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite); // VBVを設定
+			// マテリアルCBuffer
+			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
 			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
 
 			// 描画！(DraoCall/ドローコール)
