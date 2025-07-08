@@ -462,8 +462,6 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descrip
 
 #pragma endregion
 
-
-
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// COMの初期化
@@ -1031,6 +1029,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 #pragma endregion
 
+#pragma region Index用
+
+	ID3D12Resource* indexResourceSprite = CreateBufferResource(device, sizeof(uint32_t) * 6);
+
+	D3D12_INDEX_BUFFER_VIEW indexBufferViewSprite{};
+
+	//リソースの先頭のアドレスから使う
+	indexBufferViewSprite.BufferLocation = indexResourceSprite->GetGPUVirtualAddress();
+
+	//使用するするリソースのサイズはインデックス6つ分のサイズ
+	indexBufferViewSprite.SizeInBytes = sizeof(uint32_t) * 6;
+
+	//インデックスはuint32_tとする
+	indexBufferViewSprite.Format = DXGI_FORMAT_R32_UINT;
+
+	//インデックスにリソースデータを書き込む
+	uint32_t* indexDataSprite = nullptr;
+	indexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&indexDataSprite));
+	indexDataSprite[0] = 0; indexDataSprite[1] = 1; indexDataSprite[2] = 2;
+	indexDataSprite[3] = 1;	indexDataSprite[4] = 3; indexDataSprite[5] = 2;
+
+#pragma endregion
+
 	// Sprite用のTransformationMatirx用のリソースを作る。Matrix4x4 一つ分のサイズを用意する
 	ID3D12Resource* transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(TransformationMatrix));
 	// データを書き込む
@@ -1070,16 +1091,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexDataSprite[2].position = { 640.0f,360.0f,0.0f,1.0f };
 	vertexDataSprite[2].texcoord = { 1.0f,1.0f };
 
-	// ２枚目の三角形
-	// 左下
-	vertexDataSprite[3].position = { 0.0f,0.0f,0.0f,1.0f };
-	vertexDataSprite[3].texcoord = { 0.0f,0.0f };
 	// 左上
-	vertexDataSprite[4].position = { 640.0f,0.0f,0.0f,1.0f };
-	vertexDataSprite[4].texcoord = { 1.0f,0.0f };
-	// 右下
-	vertexDataSprite[5].position = { 640.0f,360.0f,0.0f,1.0f };
-	vertexDataSprite[5].texcoord = { 1.0f,1.0f };
+	vertexDataSprite[3].position = { 640.0f,0.0f,0.0f,1.0f };
+	vertexDataSprite[3].texcoord = { 1.0f,0.0f };
+	
 
 
 
@@ -1087,22 +1102,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 #pragma region Sphereの実装
 
-	const int kSubdivision = 16;
-	const int sphereVertexNum = kSubdivision * kSubdivision * 6;
+	const uint32_t kSubdivision = 16;
+	const uint32_t sphereVertexNum = kSubdivision * kSubdivision * 6;
+	const uint32_t vertexCount = (kSubdivision + 1) * (kSubdivision + 1);
 
 
 	uint32_t latIndex;
 	uint32_t lonIndex;
 
 
-	ID3D12Resource* vertexResourceSphere = CreateBufferResource(device, sizeof(VertexData) * sphereVertexNum);
+	ID3D12Resource* vertexResourceSphere = CreateBufferResource(device, sizeof(VertexData) * vertexCount);
 
+	
 	// 頂点バッファビューを作成する
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSphere{};
 	// リソースの先頭のアドレスから作成する
 	vertexBufferViewSphere.BufferLocation = vertexResourceSphere->GetGPUVirtualAddress();
 	// 使用するリソースのサイズは頂点6つ分のサイズ
-	vertexBufferViewSphere.SizeInBytes = sizeof(VertexData) * sphereVertexNum;
+	vertexBufferViewSphere.SizeInBytes = sizeof(VertexData) * vertexCount;
 	// 1頂点あたりのサイズ
 	vertexBufferViewSphere.StrideInBytes = sizeof(VertexData);
 
@@ -1123,55 +1140,73 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		for (lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
 
 			float lon = lonIndex * kLonEvery;
+#pragma region BeforeSphere
 			// 頂点データを描く
 			//頂点A
-			VertexData vertA = { {std::cosf(lat) * std::cosf(lon), std::sinf(lat),
-					 std::cosf(lat) * std::sinf(lon), 1.0f},
-					{float(lonIndex) / float(kSubdivision),
-					 1.0f - float(latIndex) / float(kSubdivision)},
-				{vertA.position.x, vertA.position.y,vertA.position.z }
-			};
-			//頂点B
-			VertexData vertB = {
-				{std::cosf(lat + kLatEvery) * std::cosf(lon),
-				 std::sinf(lat + kLatEvery),
-				 std::cosf(lat + kLatEvery) * std::sinf(lon), 1.0f},
-				{float(lonIndex) / float(kSubdivision),
-				 1.0f - float(latIndex + 1.0f) / float(kSubdivision)},
-				{ vertB.position.x, vertB.position.y, vertB.position.z } };
+			//VertexData vertA = { {std::cosf(lat) * std::cosf(lon), std::sinf(lat),
+			//		 std::cosf(lat) * std::sinf(lon), 1.0f},
+			//		{float(lonIndex) / float(kSubdivision),
+			//		 1.0f - float(latIndex) / float(kSubdivision)},
+			//	{vertA.position.x, vertA.position.y,vertA.position.z }
+			//};
+			////頂点B
+			//VertexData vertB = {
+			//	{std::cosf(lat + kLatEvery) * std::cosf(lon),
+			//	 std::sinf(lat + kLatEvery),
+			//	 std::cosf(lat + kLatEvery) * std::sinf(lon), 1.0f},
+			//	{float(lonIndex) / float(kSubdivision),
+			//	 1.0f - float(latIndex + 1.0f) / float(kSubdivision)},
+			//	{ vertB.position.x, vertB.position.y, vertB.position.z } };
 
-			//頂点C
-			VertexData vertC = { {std::cosf(lat) * std::cosf(lon + kLonEvery),
-								 std::sinf(lat),
-								 std::cosf(lat) * std::sinf(lon + kLonEvery), 1.0f},
-								{float(lonIndex + 1.0f) / float(kSubdivision),
-								 1.0f - float(latIndex) / float(kSubdivision)},
-				{ vertC.position.x, vertC.position.y, vertC.position.z } };
+			////頂点C
+			//VertexData vertC = { {std::cosf(lat) * std::cosf(lon + kLonEvery),
+			//					 std::sinf(lat),
+			//					 std::cosf(lat) * std::sinf(lon + kLonEvery), 1.0f},
+			//					{float(lonIndex + 1.0f) / float(kSubdivision),
+			//					 1.0f - float(latIndex) / float(kSubdivision)},
+			//	{ vertC.position.x, vertC.position.y, vertC.position.z } };
 
 
-			VertexData vertD = {
-				{std::cosf(lat + kLatEvery) * std::cosf(lon + kLonEvery),
-				 std::sinf(lat + kLatEvery),
-				 std::cosf(lat + kLatEvery) * std::sinf(lon + kLonEvery), 1.0f},
-				{float(lonIndex + 1.0f) / float(kSubdivision),
-				 1.0f - float(latIndex + 1.0f) / float(kSubdivision)},
-				{ vertD.position.x, vertD.position.y, vertD.position.z } };
+			//VertexData vertD = {
+			//	{std::cosf(lat + kLatEvery) * std::cosf(lon + kLonEvery),
+			//	 std::sinf(lat + kLatEvery),
+			//	 std::cosf(lat + kLatEvery) * std::sinf(lon + kLonEvery), 1.0f},
+			//	{float(lonIndex + 1.0f) / float(kSubdivision),
+			//	 1.0f - float(latIndex + 1.0f) / float(kSubdivision)},
+			//	{ vertD.position.x, vertD.position.y, vertD.position.z } };
 
-			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
+			//uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
 
-			vertexDataSphere[start + 0] = vertA;
-			vertexDataSphere[start + 1] = vertB;
-			vertexDataSphere[start + 2] = vertC;
-			vertexDataSphere[start + 3] = vertC;
-			vertexDataSphere[start + 4] = vertB;
-			vertexDataSphere[start + 5] = vertD;
+			//vertexDataSphere[start + 0] = vertA;
+			//vertexDataSphere[start + 1] = vertB;
+			//vertexDataSphere[start + 2] = vertC;
+			//vertexDataSphere[start + 3] = vertC;
+			//vertexDataSphere[start + 4] = vertD;
+			//vertexDataSphere[start + 5] = vertD;
 
 		/*	vertexDataSphere[start].normal.x = vertexDataSphere[start].position.x;
 			vertexDataSphere[start].normal.y = vertexDataSphere[start].position.y;
 			vertexDataSphere[start].normal.z = vertexDataSphere[start].position.z;
 
 			vertexDataSprite[start].normal = { 0.0f,0.0f,-1.0f };*/
+#pragma endregion
+			uint32_t index = latIndex * (kSubdivision + 1) + lonIndex;
 
+			vertexDataSphere[index].position = {
+				std::cosf(lat) * std::cosf(lon),
+				std::sinf(lat),
+				std::cosf(lat) * std::sinf(lon),
+				1.0f
+			};
+			vertexDataSphere[index].texcoord = {
+				float(lonIndex) / float(kSubdivision),
+				1.0f - float(latIndex) / float(kSubdivision)
+			};
+			vertexDataSphere[index].normal = {
+				std::cosf(lat) * std::cosf(lon),
+				std::sinf(lat),
+				std::cosf(lat) * std::sinf(lon)
+			};
 
 		}
 
@@ -1179,6 +1214,39 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 #pragma endregion
+
+	// インデックスリソース作成
+	ID3D12Resource* indexResourceSphere = CreateBufferResource(device, sizeof(uint32_t) * sphereVertexNum);
+
+	// インデックスバッファビュー作成
+	D3D12_INDEX_BUFFER_VIEW indexBufferViewSphere{};
+	indexBufferViewSphere.BufferLocation = indexResourceSphere->GetGPUVirtualAddress();
+	indexBufferViewSphere.SizeInBytes = sizeof(uint32_t) * sphereVertexNum;
+	indexBufferViewSphere.Format = DXGI_FORMAT_R32_UINT;
+
+	// インデックスデータ書き込み
+	uint32_t* indexDataSphere = nullptr;
+	indexResourceSphere->Map(0, nullptr, reinterpret_cast<void**>(&indexDataSphere));
+
+	uint32_t currentIndex = 0;
+	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
+		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
+			uint32_t a = latIndex * (kSubdivision + 1) + lonIndex;
+			uint32_t b = (latIndex + 1) * (kSubdivision + 1) + lonIndex;
+			uint32_t c = latIndex * (kSubdivision + 1) + (lonIndex + 1);
+			uint32_t d = (latIndex + 1) * (kSubdivision + 1) + (lonIndex + 1);
+
+			// 1枚目の三角形
+			indexDataSphere[currentIndex++] = a;
+			indexDataSphere[currentIndex++] = b;
+			indexDataSphere[currentIndex++] = c;
+
+			// 2枚目の三角形
+			indexDataSphere[currentIndex++] = c;
+			indexDataSphere[currentIndex++] = b;
+			indexDataSphere[currentIndex++] = d;
+		}
+	}
 
 
 #pragma region ViewportとScissor
@@ -1397,11 +1465,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootSignature(rootSignatrue);
 			commandList->SetPipelineState(graphicsPinelineState); //PSOを設定
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSphere); // VBVを設定
+			commandList->IASetIndexBuffer(&indexBufferViewSphere);
 
 
 			// 形状を設定。PSOに設定しているものとは別。同じものを設定すると考えておけば良い
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		
 
 			// wvp用のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
@@ -1412,7 +1480,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
 			// 描画！(DraoCall/ドローコール)。3頂点で1つのインスタンス。インスタンスについては今後
-			commandList->DrawInstanced(sphereVertexNum, 1, 0, 0);
+			commandList->DrawInstanced(vertexCount, 1, 0, 0);
 
 			
 
@@ -1424,7 +1492,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
 
 			// 描画！(DraoCall/ドローコール)
-			commandList->DrawInstanced(6, 1, 0, 0);
+	//		commandList->DrawInstanced(6, 1, 0, 0);
+
+			commandList->IASetIndexBuffer(&indexBufferViewSprite);//IBVを設定
+
+			//描画!(DrawCall/ドローコー)6個のインデックスを使用し1つのインスタンスを描画。その他は当面0で良い
+			commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 			// 実際のcommandListのImGuiの描画コマンドを積む
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
@@ -1522,6 +1595,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	intermediateResource2->Release();
 	materialResourceSprite->Release();
 	directionalLightResource->Release();
+	indexResourceSprite->Release();
+	indexResourceSphere->Release();
 	//transformationMatrixResourceSphere->Release();
 
 #ifdef _DEBUG
