@@ -1217,11 +1217,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 緯度分割1つ分の角度
 	const float kLatEvery = std::numbers::pi_v<float> / float(kSubdivision);
 	// 緯度の方向に分割
-	for (latIndex = 0; latIndex < kSubdivision; ++latIndex) {
+	for (latIndex = 0; latIndex <= kSubdivision; ++latIndex) {
 
 		float lat = -std::numbers::pi_v<float> / 2.0f + kLatEvery * latIndex;
 		// 経度の方向に分割しながら線を描く
-		for (lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
+		for (lonIndex = 0; lonIndex <= kSubdivision; ++lonIndex) {
 
 			float lon = lonIndex * kLonEvery;
 #pragma region BeforeSphere
