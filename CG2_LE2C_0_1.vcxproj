@@ -130,6 +130,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="extarnals\imgui\imstb_rectpack.h" />
     <ClInclude Include="extarnals\imgui\imstb_textedit.h" />
     <ClInclude Include="extarnals\imgui\imstb_truetype.h" />
+    <ClInclude Include="Matrix3x3.h" />
     <ClInclude Include="Matrix4x4.h" />
     <ClInclude Include="Vector2.h" />
     <ClInclude Include="Vector3.h" />
