@@ -1503,8 +1503,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialSpriteData->uvTransform = MakeIdentity4x4();
 
 
-
-
 	*materialSpriteData = {};
 
 	materialSpriteData->color = Vector4{ 1.0f,1.0f,1.0f,1.0f };
@@ -1684,8 +1682,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//平行光源用CBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
+			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+
 			// 描画！(DraoCall/ドローコール)。3頂点で1つのインスタンス。インスタンスについては今後
 			//commandList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
+			commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 #pragma endregion
 
 
@@ -1697,7 +1698,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
 
 			// 描画！(DraoCall/ドローコール)
-	//		commandList->DrawInstanced(6, 1, 0, 0);
+			//commandList->DrawInstanced(6, 1, 0, 0);
 
 
 			commandList->IASetIndexBuffer(&indexBufferViewSprite);//IBVを設定
@@ -1705,8 +1706,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//描画!(DrawCall/ドローコー)6個のインデックスを使用し1つのインスタンスを描画。その他は当面0で良い
 			commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
-			commandList->IASetVertexBuffers(0, vertexResource->GetGPUVirtualAddress());
-			commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 
 			// 実際のcommandListのImGuiの描画コマンドを積む
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
