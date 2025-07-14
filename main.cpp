@@ -1261,6 +1261,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	textureResource->Release();
 	depthStencilResource->Release();
 	intermediateResource->Release();
+	vertexResourceSprite->Release();
 #ifdef _DEBUG
 	debugController->Release();
 #endif
