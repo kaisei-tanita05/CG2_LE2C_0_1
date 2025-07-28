@@ -122,6 +122,35 @@ struct D3DResourceLeakChecker {
 	}
 };
 
+
+struct ChunkHeader 
+{
+	char id[4];//チャンク毎のID
+	int32_t size;//チャンクサイズ
+};
+
+struct RifferHeader 
+{
+	ChunkHeader chunk;
+	char type[4];
+};
+
+struct FormatChunk 
+{
+	ChunkHeader chunk;
+	WAVEFORMATEX fmt;
+};
+
+struct SoundData 
+{
+	//波形のフォーマット
+	WAVEFORMATEX wfex;
+	//バッファの先頭アドレス
+	BYTE* pBuffer;
+	//バッファのサイズ
+	unsigned int bufferSize;
+};
+
 #pragma endregion
 
 #pragma region クラス
@@ -713,11 +742,64 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(Microsoft::WRL::ComPtr<ID3D12
 
 #pragma endregion
 
+SoundData SoundLoadWave(const char* filename) 
+{
+	HRESULT result;
+
+	//ファイルオープン
+	std::ifstream file;
+
+	file.open(filename, std::ios_base::binary);
+
+	assert(file.is_open());
+
+	//wavデータ読み込み
+	RifferHeader riff;
+	file.read((char*)&riff, sizeof(riff));
+
+	if (strncmp(riff.chunk.id, "RIFF", 4) != 0) {
+		assert(0);
+	}
+
+	if (strncmp(riff.type, "WAVE", 4) != 0) {
+		assert(0);
+	}
+	FormatChunk format = {};
+	file.read((char*)&format, sizeof(ChunkHeader));
+	if (strncmp(format.chunk.id, "fmt", 4) != 0) {
+		assert(0);
+	}
+
+	//チャンク本体の読み込み
+	assert(format.chunk.size <= sizeof(format.fmt));
+	file.read((char*)&format.fmt, format.chunk.size);
+
+
+	ChunkHeader data;
+	file.read((char*)&data, sizeof(data));
+
+	if (strncmp(data.id, "JUNK", 4) == 0) {
+		file.seekg(data.size, std::ios_base::cur);
+
+		file.read((char*)&data, sizeof(data));
+	}
+
+	if (strncmp(data.id, "data", 4) != 0) {
+		assert(0);
+	}
+
+	//Dataチャンクのデータ部(波形データ)の読み来み
+	//ファイルクローズ
+
+
+	//読み込んだ音声データをreturn
+}
+
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
-	/*Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
-	IXAudio2MasteringVoice* masterVoice;*/
+	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
+	IXAudio2MasteringVoice* masterVoice;
 
 	D3DResourceLeakChecker leakCheck;
 	
@@ -863,7 +945,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(device != nullptr);
 	Log(logStream, ConvertString(L"Complete create D3D12Device!!!\n"));// 初期化完了のログを出す
 
-	//HRESULT result = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
+	HRESULT result = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
+
+	HRESULT result = xAudio2->CreateMasteringVoice(&masterVoice);
 #pragma endregion
 
 
@@ -1786,7 +1870,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 
 			// 描画！(DraoCall/ドローコール)。3頂点で1つのインスタンス。インスタンスについては今後
-			//commandList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
+			commandList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
 			commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 #pragma endregion
 
