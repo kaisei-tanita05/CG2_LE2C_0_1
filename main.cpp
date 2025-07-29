@@ -742,9 +742,12 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(Microsoft::WRL::ComPtr<ID3D12
 
 #pragma endregion
 
+
+//音声データの読み込み
 SoundData SoundLoadWave(const char* filename) 
 {
-	HRESULT result;
+	//HRESULT result;
+
 
 	//ファイルオープン
 	std::ifstream file;
@@ -766,7 +769,7 @@ SoundData SoundLoadWave(const char* filename)
 	}
 	FormatChunk format = {};
 	file.read((char*)&format, sizeof(ChunkHeader));
-	if (strncmp(format.chunk.id, "fmt", 4) != 0) {
+	if (strncmp(format.chunk.id, "fmt ", 4) != 0) {
 		assert(0);
 	}
 
@@ -788,11 +791,53 @@ SoundData SoundLoadWave(const char* filename)
 		assert(0);
 	}
 
+	char* pBuffer = new char[data.size];
+	file.read(pBuffer, data.size);
+
+	//Waveファイルを閉じる
+	file.close();
+
 	//Dataチャンクのデータ部(波形データ)の読み来み
 	//ファイルクローズ
 
 
 	//読み込んだ音声データをreturn
+	SoundData soundData = {};
+
+	soundData.wfex = format.fmt;
+	soundData.pBuffer = reinterpret_cast<BYTE*>(pBuffer);
+	soundData.bufferSize = data.size;
+
+	return soundData;
+}
+
+void SoundUnload(SoundData* soundData) 
+{
+	delete[] soundData->pBuffer;
+
+	soundData->pBuffer = 0;
+	soundData->bufferSize = 0;
+	soundData->wfex = {};
+}
+
+//音声再生
+void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData) {
+	HRESULT result;
+
+	//波形フォーマットをもとにSourceVoiceの生成
+	IXAudio2SourceVoice* pSourceVoice = nullptr;
+	result = xAudio2->CreateSourceVoice(&pSourceVoice, &soundData.wfex);
+	assert(SUCCEEDED(result));
+
+	//再生する波形のデータの設定
+	XAUDIO2_BUFFER buf{};
+	buf.pAudioData = soundData.pBuffer;
+	buf.AudioBytes = soundData.bufferSize;
+	buf.Flags = XAUDIO2_END_OF_STREAM;
+
+	//波形のデータの再生
+	result = pSourceVoice->SubmitSourceBuffer(&buf);
+	result = pSourceVoice->Start();
 }
 
 // Windowsアプリでのエントリーポイント(main関数)
@@ -802,6 +847,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	IXAudio2MasteringVoice* masterVoice;
 
 	D3DResourceLeakChecker leakCheck;
+	
 	
 
 	// COMの初期化
@@ -945,9 +991,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(device != nullptr);
 	Log(logStream, ConvertString(L"Complete create D3D12Device!!!\n"));// 初期化完了のログを出す
 
+
+	//音声読み込み
+	SoundData soundData1 = SoundLoadWave("resources/fanfare.wav");
+
+
 	HRESULT result = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
 
-	HRESULT result = xAudio2->CreateMasteringVoice(&masterVoice);
+	result = xAudio2->CreateMasteringVoice(&masterVoice);
+
+	//音声再生
+	SoundPlayWave(xAudio2.Get(), soundData1);
 #pragma endregion
 
 
@@ -1870,7 +1924,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 
 			// 描画！(DraoCall/ドローコール)。3頂点で1つのインスタンス。インスタンスについては今後
-			commandList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
+			//commandList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
 			commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 #pragma endregion
 
@@ -2000,14 +2054,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	CloseWindow(hwnd);
 
 	// リソースリークチェック
-	Microsoft::WRL::ComPtr<IDXGIDebug1> debug;
+	/*Microsoft::WRL::ComPtr<IDXGIDebug1> debug;
 	if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
-		/*debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
+		debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
 		debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
-		debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);*/
-		//debug->Release();
-	}
+		debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
+		debug->Release();
+	}*/
 #pragma endregion
+
+	//xAudio2解放
+	xAudio2.Reset();
+
+	//音声データ解放
+	SoundUnload(&soundData1);
 
 
 	//出力ウィンドウへの文字出力
