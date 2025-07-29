@@ -37,6 +37,8 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 #pragma comment(lib,"dxcompiler.lib")
 #pragma comment(lib,"xaudio2.lib")
 
+#define DIRECTINPUT_VERSION   0x0800
+
 using namespace MatrixMath;
 
 #pragma region 構造体
@@ -1503,7 +1505,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #pragma region ModelDataを使う
 	//ModelDataを使う
 	//モデルの読み込み
-	ModelData modelData = LoadObjFile("resources", "axis2.obj");
+	ModelData modelData = LoadObjFile("resources", "bunny.obj");
 
 	//頂点リソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
@@ -1866,6 +1868,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				materialData->enableLighting = temp_enableLightFlag ? 1 : 0;
 			}
 			ImGui::SliderFloat3("Light", &directionalLightData->direction.x, -1.0f, 0.8f);
+			ImGui::ColorEdit4("LightColor", &directionalLightData->color.x);
 
 			ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
 			ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
