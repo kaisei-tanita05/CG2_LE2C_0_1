@@ -1,3 +1,5 @@
+#define DIRECTINPUT_VERSION   0x0800//DirectInputのバージョン指定
+
 #include"Matrix4x4.h"
 #include "Matrix3x3.h"
 #include <Windows.h>
@@ -19,6 +21,7 @@
 #include <strsafe.h>
 #include <wrl.h>
 #include <xaudio2.h>
+#include <dinput.h>
 
 
 #include "extarnals/imgui//imgui.h"
@@ -36,8 +39,9 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 #pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"dxcompiler.lib")
 #pragma comment(lib,"xaudio2.lib")
+#pragma comment(lib,"dinput8.lib")
+#pragma comment(lib,"dxguid.lib")
 
-#define DIRECTINPUT_VERSION   0x0800
 
 using namespace MatrixMath;
 
