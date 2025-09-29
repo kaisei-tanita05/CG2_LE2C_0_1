@@ -32,7 +32,7 @@ PixelShaderOutput main(VertexShaderOutput input)
         output.color = gMaterial.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
     }
     else
-    {//Lightingしない場合。前回までと同じ演算
+    { //Lightingしない場合。前回までと同じ演算
         output.color = gMaterial.color * textureColor;
     }
     
