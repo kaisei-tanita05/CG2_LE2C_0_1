@@ -153,6 +153,27 @@ struct SoundData
 
 #pragma endregion
 
+#pragma region 配列
+
+enum BlendMode {
+	//!<ブレンドなし
+	kBlendModeNone,
+	//!<通常ブレンド。デフォルト。Src*SrcA+Dest*(1-SrcA)
+	kBlendModeNormal,
+	//!<加算。Src*SrcA+Dest*1
+	kBlendModeAdd,
+	//!<減算。Dest*1-Src*SrcA
+	kBlendModeSubtract,
+	//!<乗算。Src*0+Dest*Src
+	kBlendModeMultily,
+	//!<スクリーン。Src*(1-Dest)+Dest*1
+	kBlendModeScreen,
+	//利用してはいけない
+	kCount0fBlendMode
+};
+
+#pragma endregion
+
 #pragma region クラス
 //class ResourceObject {
 //public:
@@ -1335,6 +1356,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 全ての色要素を書き込む
 	blendDesc.RenderTarget[0].RenderTargetWriteMask =
 		D3D12_COLOR_WRITE_ENABLE_ALL;
+	/*blendDesc.RenderTarget[0].BlendEnable = TRUE;
+	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;*/
 
 	// RasterizerStateの設定
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
@@ -1382,48 +1410,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	hr = device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
 		IID_PPV_ARGS(&graphicsPinelineState));
 	assert(SUCCEEDED(hr));
-
-
-#pragma endregion
-
-#pragma region 頂点データの作成とビュー
-
-	//// 実際に頂点リソースを作る
-	//Microsoft::WRL::ComPtr<Microsoft::WRL::ComPtr<ID3D12Resource>> vertexResource = CreateBufferResource(device, sizeof(VertexData) * 6);
-
-	//// 頂点バッファビューを作成する
-	//D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-	//// リソースの先頭のアドレスから使う
-	//vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
-	//// 使用するリソースのサイズは頂点3つ分
-	//vertexBufferView.SizeInBytes = sizeof(VertexData) * 6;
-	//// 1頂点あたりのサイズ
-	//vertexBufferView.StrideInBytes = sizeof(VertexData);
-
-	//// 頂点リソースにデータを書き込む
-	//VertexData* vertexData = nullptr;
-	//// 書き込むためのアドレス取得
-	//vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
-	//// 左下
-	//vertexData[0] = { -0.5f,-0.5f,0.0f,1.0f };
-	//vertexData[0].texcoord = { 0.0f,1.0f };
-	//// 上
-	//vertexData[1] = { 0.0f,0.5f,0.0f,1.0f };
-	//vertexData[1].texcoord = { 0.5f,0.0f };
-	//// 右下
-	//vertexData[2] = { 0.5f,-0.5f,0.0f,1.0f };
-	//vertexData[2].texcoord = { 1.0f,1.0f };
-
-
-	//// 左下2
-	//vertexData[3].position = { -0.5f,-0.5f,0.5f,1.0f };
-	//vertexData[3].texcoord = { 0.0f,1.0f };
-	//// 上2
-	//vertexData[4].position = { 0.0f,0.0f,0.0f,1.0f };
-	//vertexData[4].texcoord = { 0.5f,0.0f };
-	//// 右下2
-	//vertexData[5].position = { 0.5f,-0.5f,-0.5f,1.0f };
-	//vertexData[5].texcoord = { 1.0f,1.0f };
 
 
 #pragma endregion
@@ -1559,56 +1545,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		for (uint32_t lonIndex = 0; lonIndex <= kSubdivision; ++lonIndex) {
 
 			float lon = kLonEvery * lonIndex;
-#pragma region BeforeSphere
-			// 頂点データを描く
-			//頂点A
-			//VertexData vertA = { {std::cosf(lat) * std::cosf(lon), std::sinf(lat),
-			//		 std::cosf(lat) * std::sinf(lon), 1.0f},
-			//		{float(lonIndex) / float(kSubdivision),
-			//		 1.0f - float(latIndex) / float(kSubdivision)},
-			//	{vertA.position.x, vertA.position.y,vertA.position.z }
-			//};
-			////頂点B
-			//VertexData vertB = {
-			//	{std::cosf(lat + kLatEvery) * std::cosf(lon),
-			//	 std::sinf(lat + kLatEvery),
-			//	 std::cosf(lat + kLatEvery) * std::sinf(lon), 1.0f},
-			//	{float(lonIndex) / float(kSubdivision),
-			//	 1.0f - float(latIndex + 1.0f) / float(kSubdivision)},
-			//	{ vertB.position.x, vertB.position.y, vertB.position.z } };
 
-			////頂点C
-			//VertexData vertC = { {std::cosf(lat) * std::cosf(lon + kLonEvery),
-			//					 std::sinf(lat),
-			//					 std::cosf(lat) * std::sinf(lon + kLonEvery), 1.0f},
-			//					{float(lonIndex + 1.0f) / float(kSubdivision),
-			//					 1.0f - float(latIndex) / float(kSubdivision)},
-			//	{ vertC.position.x, vertC.position.y, vertC.position.z } };
-
-
-			//VertexData vertD = {
-			//	{std::cosf(lat + kLatEvery) * std::cosf(lon + kLonEvery),
-			//	 std::sinf(lat + kLatEvery),
-			//	 std::cosf(lat + kLatEvery) * std::sinf(lon + kLonEvery), 1.0f},
-			//	{float(lonIndex + 1.0f) / float(kSubdivision),
-			//	 1.0f - float(latIndex + 1.0f) / float(kSubdivision)},
-			//	{ vertD.position.x, vertD.position.y, vertD.position.z } };
-
-			//uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
-
-			//vertexDataSphere[start + 0] = vertA;
-			//vertexDataSphere[start + 1] = vertB;
-			//vertexDataSphere[start + 2] = vertC;
-			//vertexDataSphere[start + 3] = vertC;
-			//vertexDataSphere[start + 4] = vertD;
-			//vertexDataSphere[start + 5] = vertD;
-
-		/*	vertexDataSphere[start].normal.x = vertexDataSphere[start].position.x;
-			vertexDataSphere[start].normal.y = vertexDataSphere[start].position.y;
-			vertexDataSphere[start].normal.z = vertexDataSphere[start].position.z;
-
-			vertexDataSprite[start].normal = { 0.0f,0.0f,-1.0f };*/
-#pragma endregion
 
 			uint32_t index = latIndex * (kSubdivision + 1) + lonIndex;
 
@@ -2004,64 +1941,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 
-#pragma region オブジェクトを解放
-
-	CloseHandle(fenceEvent);
-	/*fence->Release();
-	rtvDescriptorHeap->Release();
-	swapChainResources[0]->Release();
-	swapChainResources[1]->Release();
-	swapChain->Release();
-	commandList->Release();
-	commandAllocator->Release();
-	commandQueue->Release();
-	device->Release();
-	useAdapter->Release();
-	dxgiFactory->Release();
-	vertexResource->Release();
-	graphicsPinelineState->Release();
-	signatrueBlob->Release();
-	if (errorBlob) {
-		errorBlob->Release();
-	}
-	rootSignatrue->Release();
-	pixelShaderBlob->Release();
-	vertexShaderBlob->Release();
-	materialResource->Release();
-	wvpResource->Release();
-	srvDescriptorHeap->Release();
-	mipImages.Release();
-	textureResource->Release();
-	intermediateResource->Release();
-	depthStencilResource->Release();
-	dsvDescriptorHaap->Release();
-	vertexResourceSprite->Release();
-	transformationMatrixResourceSprite->Release();
-	vertexResourceSphere->Release();
-	textureResource2->Release();
-	intermediateResource2->Release();
-	materialResourceSprite->Release();
-	directionalLightResource->Release();
-	indexResourceSprite->Release();
-	indexResourceSphere->Release();*/
-	//transformationMatrixResourceSphere->Release();
-
-#ifdef _DEBUG
-
-	//debugController->Release();
-
-#endif // _DEBUG
-	CloseWindow(hwnd);
-
-	// リソースリークチェック
-	/*Microsoft::WRL::ComPtr<IDXGIDebug1> debug;
-	if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
-		debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
-		debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
-		debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
-		debug->Release();
-	}*/
-#pragma endregion
 
 	//xAudio2解放
 	xAudio2.Reset();
