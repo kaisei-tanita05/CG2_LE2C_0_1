@@ -1346,6 +1346,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 全ての色要素を書き込む
 	blendDesc.RenderTarget[0].RenderTargetWriteMask =
 		D3D12_COLOR_WRITE_ENABLE_ALL;
+	blendDesc.RenderTarget[0].BlendEnable = TRUE;
+	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
 
 	// RasterizerStateの設定
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
@@ -1814,6 +1821,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	directionalLightData->intensity = 1.0f;
 
+	directionalLightData->direction = Normalize(directionalLightData->direction);
+
+
+
+	//Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceDirectionSprite =
+	//	CreateBufferResource(device.Get(), sizeof(DirectionalLight));
+	//DirectionalLight* directionalLightDataSprite = nullptr;
+	//materialResourceDirectionSprite->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightDataSprite));
+
+	//// 光の色・方向・強さを設定
+	//directionalLightDataSprite->color = { 1.0f,1.0f,1.0f,1.0f };
+	//directionalLightDataSprite->direction = { 0.0f,-1.0f,0.0f }; // 上から下方向
+	////directionalLightDataSprite->intensity = 1.0f;
+	////=== ライトの方向ベクトルを正規化（方向ベクトルは常に正規化されている必要がある）===//
+	//directionalLightDataSprite->direction = Normalize(directionalLightDataSprite->direction);
+
 #pragma endregion
 
 #pragma region ImGuiの初期化
@@ -1957,6 +1980,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::SliderFloat3("Light", &directionalLightData->direction.x, -1.0f, 0.8f);
 			ImGui::ColorEdit4("LightColor", &directionalLightData->color.x);
 
+			ImGui::DragFloat("Intensity##Sprite", &directionalLightData->intensity);
+
 			ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
 			ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
 			ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
@@ -2049,6 +2074,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 			commandList->IASetIndexBuffer(&indexBufferViewSprite);//IBVを設定
+
+			//commandList->SetGraphicsRootConstantBufferView(3, materialResourceDirectionSprite->GetGPUVirtualAddress());
 
 			//描画!(DrawCall/ドローコー)6個のインデックスを使用し1つのインスタンスを描画。その他は当面0で良い
 			commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
