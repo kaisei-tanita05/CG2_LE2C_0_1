@@ -10,6 +10,30 @@
     <Filter Include="Source Files\Shaders">
       <UniqueIdentifier>{d665bb3f-6d2a-415d-83f5-abd5c813962b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\engine">
+      <UniqueIdentifier>{48b2c867-6c68-4687-b8ef-b53064940225}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\engine\2d">
+      <UniqueIdentifier>{0933b836-8a4d-46b0-99a8-af2387b75538}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\engine\3d">
+      <UniqueIdentifier>{55c2673f-61c2-4bf4-a568-aaa4d9fbc707}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\engine\audio">
+      <UniqueIdentifier>{e79386a4-46cd-46eb-8ba5-6dfdb2cae8fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\engine\base">
+      <UniqueIdentifier>{3c5a12ee-e02c-4a41-b960-4b85f856d9ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\engine\io">
+      <UniqueIdentifier>{52e6a1e5-cb3c-4b16-a684-bc97a03cc0a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\engine\math">
+      <UniqueIdentifier>{8a5f7c84-53d8-4375-be82-c57da8433c80}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\engine\scene">
+      <UniqueIdentifier>{4e457456-1a70-4965-9743-8626a1095c96}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <CLInclude Include="DirectXTex.h">
