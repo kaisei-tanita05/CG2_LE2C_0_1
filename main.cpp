@@ -1170,7 +1170,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 	// Textrueを読んで転送する
-	DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
+	DirectX::ScratchImage mipImages = LoadTexture("resources/fence.png");
 	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
 	//Microsoft::WRL::ComPtr<Microsoft::WRL::ComPtr<ID3D12Resource>> textureeResource = CreateTextureResource(device, metadata);
     // Update the code to correctly retrieve the raw pointer from the ComPtr.  
@@ -1521,7 +1521,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #pragma region ModelDataを使う
 	//ModelDataを使う
 	//モデルの読み込み
-	ModelData modelData = LoadObjFile("resources", "bunny.obj");
+	ModelData modelData = LoadObjFile("resources", "fence.obj");
 
 	//頂点リソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
