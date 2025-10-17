@@ -105,7 +105,7 @@ struct ModelData {
 
 
 struct D3DResourceLeakChecker {
-	~D3DResourceLeakChecker() 
+	~D3DResourceLeakChecker()
 	{
 		//リソースリークチェック
 		Microsoft::WRL::ComPtr<IDXGIDebug1> debug;
@@ -118,25 +118,25 @@ struct D3DResourceLeakChecker {
 };
 
 
-struct ChunkHeader 
+struct ChunkHeader
 {
 	char id[4];//チャンク毎のID
 	int32_t size;//チャンクサイズ
 };
 
-struct RifferHeader 
+struct RifferHeader
 {
 	ChunkHeader chunk;
 	char type[4];
 };
 
-struct FormatChunk 
+struct FormatChunk
 {
 	ChunkHeader chunk;
 	WAVEFORMATEX fmt;
 };
 
-struct SoundData 
+struct SoundData
 {
 	//波形のフォーマット
 	WAVEFORMATEX wfex;
@@ -346,7 +346,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
 #pragma region CompileShader関数
 
-	Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(
+Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(
 	// CompilerするShaderファイルへのパス
 	const std::wstring& filePath,
 	// Compilerに仕様するProfile
@@ -616,7 +616,7 @@ DirectX::ScratchImage LoadTexture(const std::string& filePath) {
 
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource>CreateTextureResource(const Microsoft::WRL::ComPtr<ID3D12Device> device, const DirectX::TexMetadata& metadata){
+Microsoft::WRL::ComPtr<ID3D12Resource>CreateTextureResource(const Microsoft::WRL::ComPtr<ID3D12Device> device, const DirectX::TexMetadata& metadata) {
 
 	// metadataを基にResourceの設定
 	D3D12_RESOURCE_DESC resourceDesc{};
@@ -739,7 +739,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(Microsoft::WRL::ComPtr<ID3D12
 
 
 //音声データの読み込み
-SoundData SoundLoadWave(const char* filename) 
+SoundData SoundLoadWave(const char* filename)
 {
 	//HRESULT result;
 
@@ -806,7 +806,7 @@ SoundData SoundLoadWave(const char* filename)
 	return soundData;
 }
 
-void SoundUnload(SoundData* soundData) 
+void SoundUnload(SoundData* soundData)
 {
 	delete[] soundData->pBuffer;
 
@@ -842,8 +842,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	IXAudio2MasteringVoice* masterVoice;
 
 	D3DResourceLeakChecker leakCheck;
-	
-	
+
+
 
 	// COMの初期化
 	CoInitializeEx(0, COINIT_MULTITHREADED);
@@ -869,7 +869,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	std::string dateString = std::format("{:%Y%m%d_%H%M%S}", localTime);
 	//時刻を使ってファイル名を決定
 	std::string logFilePath = std::string("logs/") + dateString + ".log";
-    std::ofstream logStream(logFilePath);
+	std::ofstream logStream(logFilePath);
 
 #pragma endregion
 
@@ -1173,8 +1173,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	DirectX::ScratchImage mipImages = LoadTexture("resources/fence.png");
 	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
 	//Microsoft::WRL::ComPtr<Microsoft::WRL::ComPtr<ID3D12Resource>> textureeResource = CreateTextureResource(device, metadata);
-    // Update the code to correctly retrieve the raw pointer from the ComPtr.  
-    Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = CreateTextureResource(device, metadata).Get();
+	// Update the code to correctly retrieve the raw pointer from the ComPtr.  
+	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = CreateTextureResource(device, metadata).Get();
 	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = UploadTextureData(textureResource, mipImages, device, commandList);
 
 	// metaDataを基にSRVの設定
@@ -1521,7 +1521,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #pragma region ModelDataを使う
 	//ModelDataを使う
 	//モデルの読み込み
-	ModelData modelData = LoadObjFile("resources", "fence.obj");
+
+	ModelData modelData = LoadObjFile("resources", "unchecker.png");
+
+
 
 	//頂点リソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
@@ -1568,9 +1571,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//単位行列を書き込んでおく
 	wvpDataObj->WVP = MakeIdentity4x4();
 
-	
 
-	
+
+
 
 
 
@@ -2184,7 +2187,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #ifdef _DEBUG
 
 	//debugController->Release();
-	
+
 #endif // _DEBUG
 	CloseWindow(hwnd);
 
