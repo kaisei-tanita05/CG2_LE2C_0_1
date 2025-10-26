@@ -13,6 +13,30 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="engine">
+      <UniqueIdentifier>{c4b75839-5715-40f9-bc47-0f48502a5f0b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\2d">
+      <UniqueIdentifier>{47d10891-8d9d-4685-b39b-7a9eaabbad78}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\3d">
+      <UniqueIdentifier>{79146224-bcd9-4d53-be88-9026b67253a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\audio">
+      <UniqueIdentifier>{7534c92d-22c8-4b7a-b26a-dfcc8dac12c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\base">
+      <UniqueIdentifier>{d6f31426-93cb-4010-8c55-a17e969a3498}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\io">
+      <UniqueIdentifier>{b377a509-1180-45bb-9825-9679c19e26dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\scene">
+      <UniqueIdentifier>{73c97288-85a4-4ab5-9696-54576033c2ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\math">
+      <UniqueIdentifier>{69e3474f-41b3-4353-ac5c-f73139d5f38b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
