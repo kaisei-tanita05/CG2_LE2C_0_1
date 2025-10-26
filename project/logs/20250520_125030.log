@@ -1,0 +1,16 @@
+Use Adapter:NVIDIA GeForce RTX 4060 Laptop GPU
+
+FeatureLevel : 12.2
+
+complete create D3D12Device!!!
+
+Hello,DirectX!
+
+clintSize:1280,720
+
+Begin CompileShader, path:Object3D.VS.hlsl,profile:vs_6_0
+
+Object3D.VS.hlsl:28:42: error: use of undeclared identifier 'gTransformationMatrix'
+    output.position = mul(input.position,gTransformationMatrix.WVP);
+                                         ^
+
