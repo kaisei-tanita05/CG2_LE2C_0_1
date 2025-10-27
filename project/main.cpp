@@ -19,6 +19,9 @@
 #include <strsafe.h>
 #include <wrl.h>
 #include <xaudio2.h>
+#define DIRECTINPUT_VERSION   0x0800 //DirectInput
+#include <dinput.h>
+
 
 
 #include "extarnals/imgui//imgui.h"
@@ -36,6 +39,8 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 #pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"dxcompiler.lib")
 #pragma comment(lib,"xaudio2.lib")
+#pragma comment(lib,"dinput8.lib")
+#pragma comment(lib,"dxguid.lib")
 
 using namespace MatrixMath;
 
@@ -1002,6 +1007,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//音声再生
 	SoundPlayWave(xAudio2.Get(), soundData1);
+
+	//DirectInputの初期化
+	IDirectInput8* directInput = nullptr;
+	result = DirectInput8Create(wc.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directInput, nullptr);
+	assert(SUCCEEDED(result));
+
+	//キーボードデバイスの生成
+	IDirectInputDevice8* keyboard = nullptr;
+	result = directInput->CreateDevice(GUID_SysKeyboard, &keyboard, NULL);
+	assert(SUCCEEDED(result));
+
+	//入力データ形式のセット
+	result = keyboard->SetDataFormat(&c_dfDIKeyboard);//標準形式
+	assert(SUCCEEDED(result));
+
+	//排他制御レベルのセット
+	result = keyboard->SetCooperativeLevel(hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
+	assert(SUCCEEDED(result));
+
 #pragma endregion
 
 
@@ -1559,56 +1583,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		for (uint32_t lonIndex = 0; lonIndex <= kSubdivision; ++lonIndex) {
 
 			float lon = kLonEvery * lonIndex;
-#pragma region BeforeSphere
-			// 頂点データを描く
-			//頂点A
-			//VertexData vertA = { {std::cosf(lat) * std::cosf(lon), std::sinf(lat),
-			//		 std::cosf(lat) * std::sinf(lon), 1.0f},
-			//		{float(lonIndex) / float(kSubdivision),
-			//		 1.0f - float(latIndex) / float(kSubdivision)},
-			//	{vertA.position.x, vertA.position.y,vertA.position.z }
-			//};
-			////頂点B
-			//VertexData vertB = {
-			//	{std::cosf(lat + kLatEvery) * std::cosf(lon),
-			//	 std::sinf(lat + kLatEvery),
-			//	 std::cosf(lat + kLatEvery) * std::sinf(lon), 1.0f},
-			//	{float(lonIndex) / float(kSubdivision),
-			//	 1.0f - float(latIndex + 1.0f) / float(kSubdivision)},
-			//	{ vertB.position.x, vertB.position.y, vertB.position.z } };
-
-			////頂点C
-			//VertexData vertC = { {std::cosf(lat) * std::cosf(lon + kLonEvery),
-			//					 std::sinf(lat),
-			//					 std::cosf(lat) * std::sinf(lon + kLonEvery), 1.0f},
-			//					{float(lonIndex + 1.0f) / float(kSubdivision),
-			//					 1.0f - float(latIndex) / float(kSubdivision)},
-			//	{ vertC.position.x, vertC.position.y, vertC.position.z } };
-
-
-			//VertexData vertD = {
-			//	{std::cosf(lat + kLatEvery) * std::cosf(lon + kLonEvery),
-			//	 std::sinf(lat + kLatEvery),
-			//	 std::cosf(lat + kLatEvery) * std::sinf(lon + kLonEvery), 1.0f},
-			//	{float(lonIndex + 1.0f) / float(kSubdivision),
-			//	 1.0f - float(latIndex + 1.0f) / float(kSubdivision)},
-			//	{ vertD.position.x, vertD.position.y, vertD.position.z } };
-
-			//uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
-
-			//vertexDataSphere[start + 0] = vertA;
-			//vertexDataSphere[start + 1] = vertB;
-			//vertexDataSphere[start + 2] = vertC;
-			//vertexDataSphere[start + 3] = vertC;
-			//vertexDataSphere[start + 4] = vertD;
-			//vertexDataSphere[start + 5] = vertD;
-
-		/*	vertexDataSphere[start].normal.x = vertexDataSphere[start].position.x;
-			vertexDataSphere[start].normal.y = vertexDataSphere[start].position.y;
-			vertexDataSphere[start].normal.z = vertexDataSphere[start].position.z;
-
-			vertexDataSprite[start].normal = { 0.0f,0.0f,-1.0f };*/
-#pragma endregion
 
 			uint32_t index = latIndex * (kSubdivision + 1) + lonIndex;
 
@@ -1806,9 +1780,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の処理に置き換える
 			ImGui::ShowDemoWindow();
 
+			//キーボード情報の取得開始
+			keyboard->Acquire();
+			//全キーの入力状態を取得する
+			BYTE key[256] = {};
+			keyboard->GetDeviceState(sizeof(key), key);
+
 			// ゲームの処理
-
-
 
 			// これから書き込むバックバッファのインデックスを取得
 			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
@@ -1829,6 +1807,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 			// TransitionBarrierを張る
 			commandList->ResourceBarrier(1, &barrier);
+
+
+
+
+
 			// 球描画
 			//transform.rotate.y += 0.03f;
 			Matrix4x4 worldMatrix = MakeAffine(transform.scale, transform.rotate, transform.translate);
@@ -1872,6 +1855,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
 
 
+			//数字の0キーが押されていたら
+			if (key[DIK_W])
+			{
+				OutputDebugStringA("Hit 0\n");//出力ウィンドウに「Hit 0」と表示
+				transformSprite.translate.x += 5.0f;
+			}
+
+
 #pragma region UVTransform
 			Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
 			uvTransformMatrix = Multipty(uvTransformMatrix, MakeRotateXMatrix(uvTransformSprite.rotate.z));
@@ -1884,7 +1875,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// ImGuiの内部コマンドを生成する
 			ImGui::Render();
-
 
 
 			// 描画先のRTVとDSVを設定する
@@ -2007,60 +1997,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #pragma region オブジェクトを解放
 
 	CloseHandle(fenceEvent);
-	/*fence->Release();
-	rtvDescriptorHeap->Release();
-	swapChainResources[0]->Release();
-	swapChainResources[1]->Release();
-	swapChain->Release();
-	commandList->Release();
-	commandAllocator->Release();
-	commandQueue->Release();
-	device->Release();
-	useAdapter->Release();
-	dxgiFactory->Release();
-	vertexResource->Release();
-	graphicsPinelineState->Release();
-	signatrueBlob->Release();
-	if (errorBlob) {
-		errorBlob->Release();
-	}
-	rootSignatrue->Release();
-	pixelShaderBlob->Release();
-	vertexShaderBlob->Release();
-	materialResource->Release();
-	wvpResource->Release();
-	srvDescriptorHeap->Release();
-	mipImages.Release();
-	textureResource->Release();
-	intermediateResource->Release();
-	depthStencilResource->Release();
-	dsvDescriptorHaap->Release();
-	vertexResourceSprite->Release();
-	transformationMatrixResourceSprite->Release();
-	vertexResourceSphere->Release();
-	textureResource2->Release();
-	intermediateResource2->Release();
-	materialResourceSprite->Release();
-	directionalLightResource->Release();
-	indexResourceSprite->Release();
-	indexResourceSphere->Release();*/
-	//transformationMatrixResourceSphere->Release();
+
 
 #ifdef _DEBUG
 
-	//debugController->Release();
-
 #endif // _DEBUG
 	CloseWindow(hwnd);
-
-	// リソースリークチェック
-	/*Microsoft::WRL::ComPtr<IDXGIDebug1> debug;
-	if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
-		debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
-		debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
-		debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
-		debug->Release();
-	}*/
 #pragma endregion
 
 	//xAudio2解放
