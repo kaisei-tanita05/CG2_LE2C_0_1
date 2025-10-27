@@ -1,0 +1,26 @@
+Use Adapter:NVIDIA GeForce RTX 4060 Laptop GPU
+
+FeatureLevel : 12.2
+
+complete create D3D12Device!!!
+
+Hello,DirectX!
+
+clintSize:1280,720
+
+Begin CompileShader, path:Object3D.VS.hlsl,profile:vs_6_0
+
+Object3D.VS.hlsl:17:1: error: unknown type name 'VertexShaderOutput'; did you mean 'VertexShadeOutput'?
+VertexShaderOutput main(VertexShadeInput input)
+^~~~~~~~~~~~~~~~~~
+VertexShadeOutput
+Object3D.VS.hlsl:7:8: note: 'VertexShadeOutput' declared here
+struct VertexShadeOutput
+       ^
+
+Compile Succeded,path:Object3D.VS.hlsl,profile:vs_6_0
+
+Begin CompileShader, path:Object3D.PS.hlsl,profile:ps_6_0
+
+Compile Succeded,path:Object3D.PS.hlsl,profile:ps_6_0
+
