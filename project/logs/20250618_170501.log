@@ -1,0 +1,12 @@
+Use Adapater:NVIDIA GeForce RTX 4060 Laptop GPU
+
+FeatrueLevel : 12.2
+
+Complete create D3D12Device!!!
+
+Begin CompileShader,path:Object3D.VS.hlsl,profile:vs_6_0
+
+Object3D.VS.hlsl:32:41: error: no member named 'normal' in 'VertexShaderInput'
+    output.normal = normalize(mul(input.normal, (float32_t3x3) gTransformationMatrix.World));
+                                  ~~~~~ ^
+
