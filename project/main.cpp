@@ -1852,6 +1852,31 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//	transformSprite.translate.x += 5.0f;
 			//}
 
+			if (input->PushKey(DIK_W)) {
+				OutputDebugStringA("Hit 0\n");//出力ウィンドウに「Hit 0」と表示
+				transformSprite.translate.y -= 5.0f;
+			}
+
+			if (input->PushKey(DIK_A)) {
+				OutputDebugStringA("Hit 0\n");//出力ウィンドウに「Hit 0」と表示
+				transformSprite.translate.x -= 5.0f;
+			}
+
+
+			if (input->PushKey(DIK_S)) {
+				OutputDebugStringA("Hit 0\n");//出力ウィンドウに「Hit 0」と表示
+				transformSprite.translate.y += 5.0f;
+			}
+
+			if (input->PushKey(DIK_D)) {
+				OutputDebugStringA("Hit 0\n");//出力ウィンドウに「Hit 0」と表示
+				transformSprite.translate.x += 5.0f;
+			}
+
+			if (input->TriggerKey(DIK_0)) {
+				OutputDebugStringA("Hit 0\n");//出力ウィンドウに「Hit 0」と表示
+				transformSprite.translate.x += 5.0f;
+			}
 
 #pragma region UVTransform
 			Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
