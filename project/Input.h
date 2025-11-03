@@ -24,6 +24,8 @@ private://メンバ変数
 	//キーボードのデバイス
 	ComPtr<IDirectInputDevice8> keyboard;
 
+	//DirectInputのインスタンス
+	ComPtr<IDirectInput8> directInput;
 
 	BYTE key[256] = {};
 
