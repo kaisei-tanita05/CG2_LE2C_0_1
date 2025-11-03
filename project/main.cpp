@@ -19,6 +19,7 @@
 #include <strsafe.h>
 #include <wrl.h>
 #include <xaudio2.h>
+#include "Input.h"
 
 
 #include "extarnals/imgui//imgui.h"
@@ -1807,7 +1808,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::ShowDemoWindow();
 
 			// ゲームの処理
-
 
 
 			// これから書き込むバックバッファのインデックスを取得
