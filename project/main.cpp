@@ -1734,8 +1734,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//入力の初期化
 	input = new Input();
 	input->Initialize(wc.hInstance,hwnd);
-	//入力解放
-	delete input;
+	
 #pragma endregion
 
 #pragma region ImGuiの初期化
@@ -1775,11 +1774,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の処理に置き換える
 			ImGui::ShowDemoWindow();
 
-			//キーボード情報の取得開始
-			keyboard->Acquire();
-			//全キーの入力状態を取得する
-			BYTE key[256] = {};
-			keyboard->GetDeviceState(sizeof(key), key);
+			input->Update();
 
 			// ゲームの処理
 
@@ -1851,11 +1846,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 			//数字の0キーが押されていたら
-			if (key[DIK_W])
-			{
-				OutputDebugStringA("Hit 0\n");//出力ウィンドウに「Hit 0」と表示
-				transformSprite.translate.x += 5.0f;
-			}
+			//if (key[DIK_0])
+			//{
+			//	OutputDebugStringA("Hit 0\n");//出力ウィンドウに「Hit 0」と表示
+			//	transformSprite.translate.x += 5.0f;
+			//}
 
 
 #pragma region UVTransform
@@ -1996,6 +1991,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 #ifdef _DEBUG
 
+
 #endif // _DEBUG
 	CloseWindow(hwnd);
 #pragma endregion
@@ -2006,6 +2002,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//音声データ解放
 	SoundUnload(&soundData1);
 
+	//入力解放
+	delete input;
 
 	//出力ウィンドウへの文字出力
 	Log(logStream, "HelloWored\n");
