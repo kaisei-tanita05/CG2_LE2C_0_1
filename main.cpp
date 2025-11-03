@@ -19,7 +19,7 @@
 #include <strsafe.h>
 #include <wrl.h>
 #include <xaudio2.h>
-#include <dinput.h>
+#include <dinput.h>w
 
 
 #include "extarnals/imgui//imgui.h"
