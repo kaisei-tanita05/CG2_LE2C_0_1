@@ -22,6 +22,7 @@
 #define DIRECTINPUT_VERSION   0x0800 //DirectInput
 #include <dinput.h>
 #include "Input.h"
+#include "WinApp.h"
 
 
 
@@ -332,27 +333,7 @@ void Log(std::ostream& os, const std::string& message) {
 #pragma endregion
 
 #pragma region ウィンドウ関数
-// ウィンドウプロシーシャ
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
-	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
-
-		return true;
-	}
-
-	// メッセージに応じてゲーム固有の処理を行う
-	switch (msg) {
-		// ウィンドウが破壊された
-	case WM_DESTROY:
-		// OSに対して、アプリの終了を伝える
-		PostQuitMessage(0);
-
-		return 0;
-	}
-	// 標準のメッセージ処理を行う
-	return DefWindowProc(hwnd, msg, wparam, lparam);
-
-}
 #pragma endregion
 
 #pragma region CompileShader関数
@@ -855,10 +836,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3DResourceLeakChecker leakCheck;
 
 
-
-	// COMの初期化
-	CoInitializeEx(0, COINIT_MULTITHREADED);
-
 	// 誰も補掟しなかった場合に(Unhandled),補掟する関数を登録
 	// main関数は始まってすぐに登録するといい
 	SetUnhandledExceptionFilter(ExportDump);
@@ -887,44 +864,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 #pragma region ウィンドウ
 
-	WNDCLASS wc{};
-	// ウィンドウプロシーシャ
-	wc.lpfnWndProc = WindowProc;
-	// ウィンドウクラス名（なんでもいい）
-	wc.lpszClassName = L"CG2WindowClass";
-	// インスタンスハンドル
-	wc.hInstance = GetModuleHandle(nullptr);
-	// カーソル
-	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-
-	RegisterClass(&wc);
-
-	// クライアント領域サイズ
-	const int32_t kClientWidth = 1280;
-	const int32_t kClientHeight = 720;
-
-	//ウィンドウサイズを表す構造体にクライアント領域を入れる
-	RECT wrc = { 0,0,kClientWidth,kClientHeight };
-
-	// クライアント領域を元に実際のサイズにwrcを変更してもらう
-	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
-
-	// ウィンドウの生成
-	HWND hwnd = CreateWindow(
-		wc.lpszClassName,      // 利用するクラス名
-		L"CG2",                // タイトルバーの文字(なんでもいい)
-		WS_OVERLAPPEDWINDOW,   // よく見るウィンドウスタイル
-		CW_USEDEFAULT,		   // 表示X座標(Windowsに任せる)
-		CW_USEDEFAULT,		   // 表示Y座標(WindowsOSに任せる)
-		wrc.right - wrc.left,  // ウィンドウ横幅
-		wrc.bottom - wrc.top,  // ウィンドウ立幅
-		nullptr,			   // 親ウィンドウハンドル
-		nullptr,			   // メニューハンドル
-		wc.hInstance,		   // インスタンスハンドル
-		nullptr				   // オプション
-	);
-	// ウィンドウを表示
-	ShowWindow(hwnd, SW_SHOW);
+	
 
 #pragma endregion
 
@@ -1737,6 +1677,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	
 #pragma endregion
 
+	//ポインタ
+	WinApp* winApp = nullptr;
+	//WindowsAPIの初期化
+	winApp = new WinApp();
+	winApp->Initialize();
+
 #pragma region ImGuiの初期化
 
 	IMGUI_CHECKVERSION();
@@ -2029,6 +1975,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//入力解放
 	delete input;
+
+	//WindowsAPI解放
+	delete winApp;
 
 	//出力ウィンドウへの文字出力
 	Log(logStream, "HelloWored\n");
