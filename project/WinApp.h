@@ -15,4 +15,21 @@ public://メンバ関数
 
 	//更新
 	void Update();
+
+	// クライアント領域サイズ
+	static const int32_t kClientWidth = 1280;
+	static const int32_t kClientHeight = 720;
+
+	//getter
+	HWND GetHwnd() const { return hwnd; }
+
+	//getter
+	HINSTANCE GetHinstance() const { return wc.hInstance; }
+
+private:
+	//ウィンドウハンドル
+	HWND hwnd = nullptr;
+
+	//ウィンドウクラスの設定
+	WNDCLASS wc{};
 };
