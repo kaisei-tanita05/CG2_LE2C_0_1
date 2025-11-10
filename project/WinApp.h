@@ -26,10 +26,15 @@ public://メンバ関数
 	//getter
 	HINSTANCE GetHinstance() const { return wc.hInstance; }
 
+	//終了
+	void Finalize();
+
+	bool ProcessMessage();
 private:
 	//ウィンドウハンドル
 	HWND hwnd = nullptr;
 
 	//ウィンドウクラスの設定
 	WNDCLASS wc{};
+
 };

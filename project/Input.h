@@ -3,6 +3,7 @@
 #include <wrl.h>
 #define DIRECTINPUT_VERSION  0x0800 //DirectInputのバージン指定
 #include <dinput.h>
+#include "WinApp.h"
 
 
 
@@ -10,7 +11,7 @@ class Input
 {
 public:
 
-	void Initialize(HINSTANCE histance,HWND hwnd);
+	void Initialize(WinApp* winApp);
 
 	void Update();
 
@@ -31,5 +32,7 @@ private://メンバ変数
 
 	//前回の全キーの状態
 	BYTE keyPre[256] = {};
+	//WindowsAPI
+	WinApp* winApp_ = nullptr;
 };
 
