@@ -10,5 +10,14 @@ public://メンバ関数
 
 	void Initialize();
 
+	void Deviceinitialize();
+
+	void CommandListInitialize();
+
+private:
+	//DirectX12デバイス
+	Microsoft::WRL::ComPtr<ID3D12Device> device;
+	//DXGIファクトリ	
+	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory;
 };
 
