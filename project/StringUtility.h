@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-class StringUtility
+namespace StringUtility
 {
 	//stringをwstringに変換する
 	std::wstring  ConvertString(const std::string& str);
