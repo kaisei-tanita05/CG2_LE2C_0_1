@@ -2,24 +2,15 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl.h>
-#include "WinApp.h"
-#include "Logger.h"
-#include <dxcapi.h>
-#include<Windows.h>
 #include <array>
-#include <cassert>
+#include "WinApp.h"
+#include <dxcapi.h>
 #include <string>
 #include "StringUtility.h"
-
-
-#include "extarnals/DirectXTex/d3dx12.h"
 #include "extarnals/DirectXTex/DirectXTex.h"
 
-#include "extarnals/imgui//imgui.h"
-#include "extarnals/imgui/imgui_impl_dx12.h"
-#include "extarnals/imgui/imgui_impl_win32.h"
 
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+//extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 
 class DirectXCommon
