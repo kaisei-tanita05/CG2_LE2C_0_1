@@ -80,8 +80,6 @@ void WinApp::Finalize() {
 
 bool WinApp::ProcessMessage() 
 {
-	return false;
-
 	MSG msg{};
 
 	if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {

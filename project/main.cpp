@@ -25,13 +25,14 @@
 #include "WinApp.h"
 #include "DirectXCommon.h"
 #include "StringUtility.h"
+#include "D3DResourceLeakChecker.h"
 
 
 #include "extarnals/imgui//imgui.h"
 #include "extarnals/imgui/imgui_impl_dx12.h"
 #include "extarnals/imgui/imgui_impl_win32.h"
 #include "extarnals/DirectXTex/d3dx12.h"
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 #include "extarnals/DirectXTex/DirectXTex.h"
 
 
@@ -116,19 +117,6 @@ struct ModelData {
 	MaterialData material;
 };
 
-
-struct D3DResourceLeakChecker {
-	~D3DResourceLeakChecker()
-	{
-		//リソースリークチェック
-		Microsoft::WRL::ComPtr<IDXGIDebug1> debug;
-		if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
-			debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
-			debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
-			debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
-		}
-	}
-};
 
 
 struct ChunkHeader
@@ -871,11 +859,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Microsoft::WRL::ComPtr<ID3D10Blob> errorBlob = nullptr;
 	hr = D3D12SerializeRootSignature(&descriptionRootSignature,
 		D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
-	/*if (FAILED(hr)) {
-		Log(logStream, reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
+	if (FAILED(hr)) {
+		//Log(logStream, reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
 		assert(false);
 
-	}*/
+	}
 
 	
 	//バイナリを元に生成
@@ -1198,7 +1186,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				1.0f
 			};
 			vertexDataSphere[index].texcoord = {
-				float(lonIndex) / float(kSubdivision),
+				1.0f - float(lonIndex) / float(kSubdivision),
 				1.0f - float(latIndex) / float(kSubdivision)
 			};
 			vertexDataSphere[index].normal = {
@@ -1391,7 +1379,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// 開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の処理に置き換える
 		ImGui::ShowDemoWindow();
 
-		dxCommon->PreDraw();
+		
 
 		//input->Update();
 
@@ -1493,7 +1481,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// ImGuiの内部コマンドを生成する
 		ImGui::Render();
 
-
+		dxCommon->PreDraw();
 		
 		// rootSignatrueを設定。PSOに設定してるけど別途設定が必要
 		dxCommon->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
@@ -1516,7 +1504,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
 
 		// 描画！(DraoCall/ドローコール)。3頂点で1つのインスタンス。インスタンスについては今後
-		dxCommon->GetCommandList()->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
+		//xCommon->GetCommandList()->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
 		dxCommon->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 #pragma endregion
 
