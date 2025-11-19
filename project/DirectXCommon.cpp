@@ -13,6 +13,7 @@
 #include "extarnals/imgui//imgui.h"
 #include "extarnals/imgui/imgui_impl_dx12.h"
 #include "extarnals/imgui/imgui_impl_win32.h"
+#include <thread>
 
 using namespace Microsoft::WRL;
 
@@ -652,7 +653,7 @@ void DirectXCommon::InitializeFixFPS()
 	reference_ = std::chrono::steady_clock::now();
 }
 
-void DirectXCommon::UpdateFixFPS() 
+void DirectXCommon::UpdateFixFPS()
 {
 	// 1/60秒ピッタリの時間
 	const std::chrono::microseconds kMinTime(uint64_t(1000000.0f / 60.0f));
@@ -669,7 +670,8 @@ void DirectXCommon::UpdateFixFPS()
 		// 1/60秒経過するまで縮小なスリープを繰り返す
 		while (std::chrono::steady_clock::now() - reference_ < kMinTime) {
 			//1マイクロ秒スリープ
-			std::
+			std::this_thread::sleep_for(std::chrono::microseconds(1));
 		}
 	}
+	reference_ = std::chrono::steady_clock::now();
 }
