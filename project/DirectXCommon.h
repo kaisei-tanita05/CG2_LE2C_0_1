@@ -8,6 +8,7 @@
 #include <string>
 #include "StringUtility.h"
 #include "extarnals/DirectXTex/DirectXTex.h"
+#include <chrono>
 
 
 //extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -173,5 +174,14 @@ private:
 	//フェンス値
 	UINT64 fenceValue;
 
+	//FPS固定初期化
+	void InitializeFixFPS();
+
+	//FPS固定更新
+	void UpdateFixFPS();
+
+	//メンバ関数
+	//記録時間
+	std::chrono::steady_clock::time_point reference_;
 };
 
