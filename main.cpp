@@ -1563,7 +1563,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	for (uint32_t index = 0; index < kNumInstance; ++index) {
 		transforms[index].scale = { 1.0f,1.0f,1.0f };
 		transforms[index].rotate = { 0.0f,0.0f,0.0f };
-		transforms[index].translate = { index + 0.1f,index + 0.1f,index + 0.1f };
+		transforms[index].translate = { index * 0.1f,index * 0.1f,index * 0.1f };
 	}
 
 #pragma region ModelDataを使う
@@ -1572,6 +1572,54 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	ModelData modelData = LoadObjFile("resources", "plane.obj");
 
+
+	// 頂点バッファ用のリソース
+	Microsoft::WRL::ComPtr<ID3D12Resource> instancingVertexResource = CreateBufferResource(device, sizeof(VertexData) * UINT(modelData.vertices.size()));
+	// 頂点バッファビューを作成する
+	D3D12_VERTEX_BUFFER_VIEW instancingVertexBufferView{};
+	// リソースの先頭のアドレスから使う
+	instancingVertexBufferView.BufferLocation = instancingVertexResource->GetGPUVirtualAddress();
+	// 使用するリソースのサイズは頂点4つ分のサイズ
+	instancingVertexBufferView.SizeInBytes = sizeof(VertexData) * UINT(modelData.vertices.size());
+	// 1頂点あたりのサイズ
+	instancingVertexBufferView.StrideInBytes = sizeof(VertexData);
+
+	// インデックスバッファビューを作成する
+	D3D12_INDEX_BUFFER_VIEW instancingIndexBufferView{};
+	// 使用するリソースのサイズはインデックス6つ分のサイズ
+	instancingIndexBufferView.SizeInBytes = sizeof(uint32_t) * 6;
+    Microsoft::WRL::ComPtr<ID3D12Resource> instancingIndexResource = CreateBufferResource(device, instancingIndexBufferView.SizeInBytes);
+	// インデックスはuint32_tで表す
+	instancingIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
+
+	// 頂点リソースにデータを書き込む
+	VertexData* instancingVertexData = nullptr;
+	// 書き込むためのアドレスを取得
+	instancingVertexResource->Map(0, nullptr, reinterpret_cast<void**>(&instancingVertexData));
+
+	instancingVertexData[0].position = { 1.0f, 1.0f, 0.0f, 1.0f };
+	instancingVertexData[0].texcoord = { 0.0f, 0.0f };
+	instancingVertexData[0].normal = { 0.0f, 0.0f, 1.0f };
+
+	instancingVertexData[1].position = { -1.0f, 1.0f, 0.0f, 1.0f };
+	instancingVertexData[1].texcoord = { 1.0f, 0.0f };
+	instancingVertexData[1].normal = { 0.0f, 0.0f, 1.0f };
+
+	instancingVertexData[2].position = { 1.0f, -1.0f, 0.0f, 1.0f };
+	instancingVertexData[2].texcoord = { 0.0f, 1.0f };
+	instancingVertexData[2].normal = { 0.0f, 0.0f, 1.0f };
+
+	instancingVertexData[3].position = { 1.0f, -1.0f, 0.0f, 1.0f };
+	instancingVertexData[3].texcoord = { 0.0f, 1.0f };
+	instancingVertexData[3].normal = { 0.0f, 0.0f, 1.0f };
+
+	instancingVertexData[4].position = { -1.0f, 1.0f, 0.0f, 1.0f };
+	instancingVertexData[4].texcoord = {1.0f, 0.0f };
+	instancingVertexData[4].normal = { 0.0f, 0.0f, 1.0f };
+
+	instancingVertexData[5].position = { -1.0f, -1.0f, 0.0f, 1.0f };
+	instancingVertexData[5].texcoord = { 1.0f, 1.0f };
+	instancingVertexData[5].normal = { 0.0f, 0.0f, 1.0f };
 
 
 	////頂点リソースを作る
@@ -1894,7 +1942,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// Transform変数を作る
 	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-	Transform cameraTransfrom{ {10.0f,1.0f,1.0f},{0.2f,3.14f,0.0f},{0.0f,20.0f,15.0f} };
+	Transform cameraTransfrom{ {1.0f,1.0f,1.0f},{0.2f,3.14f,0.0f},{0.0f,2.0f,10.0f} };
 	Transform transformSprite{ {1.0f,1.0f,1.0f,},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 	Transform uvTransformSprite{
 		{1.0f,1.0f,1.0f},
@@ -2136,6 +2184,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			//描画!(DrawCall/ドローコー)6個のインデックスを使用し1つのインスタンスを描画。その他は当面0で良い
 			//commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+			commandList->IASetVertexBuffers(0, 1, &instancingVertexBufferView);   // VBVを設定
+			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootDescriptorTable(1, instancingSrvHandleGPU);
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 			commandList->DrawInstanced(UINT(modelData.vertices.size()), kNumInstance, 0, 0);
 
 
