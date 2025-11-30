@@ -146,6 +146,12 @@ struct SoundData
 	unsigned int bufferSize;
 };
 
+
+struct Particle {
+	Transform transform;
+	Vector3 velocity;
+};
+
 #pragma endregion
 
 #pragma region クラス
@@ -1566,6 +1572,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		transforms[index].translate = { index * 0.1f,index * 0.1f,index * 0.1f };
 	}
 
+	Particle particles[kNumInstance];
+	for (uint32_t index = 0; index < kNumInstance; ++index) {
+		particles[index].transform.scale = { 1.0f,1.0f,1.0f };
+		particles[index].transform.rotate = { 0.0f,0.0f,0.0f };
+		particles[index].transform.translate = { index * 0.1f,index * 0.1f,index * 0.1f };
+		particles[index].velocity = { 0.0f,1.0f,0.0f };
+	}
+
+
+	const float kDeltaTime = 1.0f / 60.0f;
 #pragma region ModelDataを使う
 	//ModelDataを使う
 	//モデルの読み込み
@@ -1980,7 +1996,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// ゲームの処理
 
-
+			//particles[index].transform.translate += particles[index].velocity * kDeltaTime;
 
 			// これから書き込むバックバッファのインデックスを取得
 			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
