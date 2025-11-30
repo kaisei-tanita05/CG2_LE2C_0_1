@@ -26,6 +26,8 @@
 #include "DirectXCommon.h"
 #include "StringUtility.h"
 #include "D3DResourceLeakChecker.h"
+#include "SpriteCommon.h"
+#include "Sprite.h"
 
 
 #include "extarnals/imgui//imgui.h"
@@ -636,11 +638,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// main関数は始まってすぐに登録するといい
 	SetUnhandledExceptionFilter(ExportDump);
 
+#pragma region 基盤システムの初期化
 	WinApp* winApp = nullptr;
 
 	winApp = new WinApp();
 
 	winApp->Initialize();
+
+	SpriteCommon* spriteCommon = nullptr;
+
+	//スプライト共通部の初期化
+	spriteCommon = new SpriteCommon;
+	spriteCommon->Initialize();
+#pragma endregion
 
 #pragma region log
 
@@ -697,7 +707,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 #pragma endregion
 
-
+#pragma region 最初のシーンの初期化
+	Sprite* sprite = new Sprite();
+	sprite->Initialize();
+#pragma endregion
 
 #ifdef _DEBUG
 
