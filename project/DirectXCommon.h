@@ -84,6 +84,9 @@ public://メンバ関数
 
 	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
 
+
+
+
 private:
 	WinApp* winApp = nullptr;
 
