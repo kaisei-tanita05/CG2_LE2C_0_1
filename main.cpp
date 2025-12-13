@@ -20,6 +20,7 @@
 #include <wrl.h>
 #include <xaudio2.h>
 #include <dinput.h>
+#include <random>
 
 
 #include "extarnals/imgui//imgui.h"
@@ -195,6 +196,24 @@ static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception) {
 }
 
 #pragma endregion
+
+// Vector3型とfloat型の乗算演算子オーバーロードを追加
+Vector3 operator*(const Vector3& v, float s) {
+	return { v.x * s, v.y * s, v.z * s };
+}
+
+// 逆順（float * Vector3）も必要な場合
+Vector3 operator*(float s, const Vector3& v) {
+	return v * s;
+}
+
+// Vector3型の加算代入演算子（+=）をオーバーロード
+Vector3& operator+=(Vector3& lhs, const Vector3& rhs) {
+	lhs.x += rhs.x;
+	lhs.y += rhs.y;
+	lhs.z += rhs.z;
+	return lhs;
+}
 
 Vector3 Normalize(const Vector3& v) {
 	float length = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
@@ -924,6 +943,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 #pragma endregion
 
+
+#pragma region 乱数生成器の初期化
+
+	std::random_device seeGenerator;
+	std::mt19937 randomEngine(seeGenerator());
+
+	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+	
+
+#pragma endregion
+
 #ifdef _DEBUG
 
 	Microsoft::WRL::ComPtr<ID3D12Debug1> debugController = nullptr;
@@ -1565,12 +1595,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	device->CreateShaderResourceView(instancingResource.Get(), &instancingSrvDesc, instancingSrvHandleCPU);
 
 
-	Transform transforms[kNumInstance];
+	/*Transform transforms[kNumInstance];
 	for (uint32_t index = 0; index < kNumInstance; ++index) {
 		transforms[index].scale = { 1.0f,1.0f,1.0f };
 		transforms[index].rotate = { 0.0f,0.0f,0.0f };
 		transforms[index].translate = { index * 0.1f,index * 0.1f,index * 0.1f };
-	}
+	}*/
 
 	Particle particles[kNumInstance];
 	for (uint32_t index = 0; index < kNumInstance; ++index) {
@@ -1996,7 +2026,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// ゲームの処理
 
-			//particles[index].transform.translate += particles[index].velocity * kDeltaTime;
+			
 
 			// これから書き込むバックバッファのインデックスを取得
 			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
@@ -2038,11 +2068,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 
-			for (uint32_t index = 0; index < kNumInstance; ++index) {
+			/*for (uint32_t index = 0; index < kNumInstance; ++index) {
 				Matrix4x4 worldMatrix = MakeAffine(transforms[index].scale, transforms[index].rotate, transforms[index].translate);
 				Matrix4x4 worldViewProjectionMatrix = Multipty(worldMatrix, Multipty(viewMatrix,projectionMatrix));
 				instancingData[index].WVP = worldViewProjectionMatrix;
 				instancingData[index].World = worldMatrix;
+			}*/
+
+			for (uint32_t index = 0; index < kNumInstance; ++index) {
+				Matrix4x4 worldMatrix = MakeAffine(particles[index].transform.scale, particles[index].transform.rotate, particles[index].transform.translate);
+				Matrix4x4 worldViewProjectionMatrix = Multipty(worldMatrix, Multipty(viewMatrix, projectionMatrix));
+				instancingData[index].WVP = worldViewProjectionMatrix;
+				instancingData[index].World = worldMatrix;
+				particles[index].transform.translate += particles[index].velocity * kDeltaTime;
+				particles[index].transform.translate = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
 			}
 
 			//Obj用
