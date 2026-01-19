@@ -25,7 +25,7 @@ void Sprite::Update() {
 
 	// 1枚目の三角形
 	// 左下
-	vertexData_[0].position = { 0.0f,1.0f,0.0f,1.0f };
+	vertexData_[0].position = { 0.0f,360.0f,0.0f,1.0f };
 	vertexData_[0].texcoord = { 0.0f,1.0f };
 	vertexData_[0].normal = { 0.0f,0.0f,-1.0f };
 
@@ -35,19 +35,19 @@ void Sprite::Update() {
 	vertexData_[1].normal = { 0.0f,0.0f,-1.0f };
 
 	////右下
-	vertexData_[2].position = { 1.0f,1.0f,0.0f,1.0f };
+	vertexData_[2].position = { 640.0f,360.0f,0.0f,1.0f };
 	vertexData_[2].texcoord = { 1.0f,1.0f };
 	vertexData_[2].normal = { 0.0f,0.0f,-1.0f };
 
 	////右上
-	vertexData_[3].position = { 1.0f,0.0f,0.0f,1.0f };
+	vertexData_[3].position = { 640.0f,0.0f,0.0f,1.0f };
 	vertexData_[3].texcoord = { 1.0f,0.0f };
 	vertexData_[3].normal = { 0.0f,0.0f,-1.0f };
 
 	indexData[0] = 0; indexData[1] = 1; indexData[2] = 2;
 	indexData[3] = 1;	indexData[4] = 3; indexData[5] = 2;
 
-	transform.rotate.y += 0.01f;
+	//transform.rotate.y += 0.01f;
 	// Sprite
 	Matrix4x4 worldMatrix = MakeAffine(transform.scale, transform.rotate, transform.translate);
 	Matrix4x4 viewMatrix = MakeIdentity4x4();
@@ -67,7 +67,7 @@ void Sprite::Draw()
 	dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 	dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
 
-	dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, dxCommon->GetSRVGPUDescriptorHandle(0));
+	dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, dxCommon->GetSRVGPUDescriptorHandle(1));
 
 	//描画!(DrawCall/ドローコー)6個のインデックスを使用し1つのインスタンスを描画。その他は当面0で良い
 	dxCommon->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
