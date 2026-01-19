@@ -9,8 +9,6 @@
 #include "StringUtility.h"
 #include "extarnals/DirectXTex/DirectXTex.h"
 #include <chrono>
-#include "SpriteCommon.h"
-#include "Sprite.h"
 
 
 //extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);

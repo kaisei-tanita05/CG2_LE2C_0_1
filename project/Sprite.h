@@ -9,28 +9,27 @@ class SpriteCommon;
 
 
 
-struct TransformationMatrix
-{
-	Matrix4x4 WVP;
-
-	Matrix4x4 World;
-};
 
 
-
-
-
-struct Material
-{
-	Vector4 color;
-	int32_t enableLighting;
-	float padding[3];
-	Matrix4x4 uvTransform;
-};
 
 //スプライト
 class Sprite
 {
+
+	struct TransformationMatrix
+	{
+		Matrix4x4 WVP;
+
+		Matrix4x4 World;
+	};
+
+	struct Material
+	{
+		Vector4 color;
+		int32_t enableLighting;
+		float padding[3];
+		Matrix4x4 uvTransform;
+	};
 
 	struct VertexData {
 		Vector4 position;
@@ -38,16 +37,22 @@ class Sprite
 		Vector3 normal;
 	};
 
+	struct Transform {
+		Vector3 scale;
+		Vector3 rotate;
+		Vector3 translate;
+	};
+
 public://メンバ関数
 	//初期化
-	void Initialize(SpriteCommon*spriteCommon);
+	void Initialize(SpriteCommon* spriteCommon);
 
 	void Update();
 
 	void Draw();
 private:
 	SpriteCommon* spriteCommon = nullptr;
-	
+
 	DirectXCommon* dxCommon;
 
 	VertexData* vertexData_;
@@ -58,36 +63,24 @@ private:
 
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
 
-	// 頂点バッファビューを作成する
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSprite_;
 
-	VertexData* vertexDataSprite_ = nullptr;
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource;
+	TransformationMatrix* transformationMatrixData = nullptr;
 
-	Matrix4x4* transformationMatrixData;
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource;
+	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
 
-	TransformationMatrix* wvpData = nullptr;
+	Material* materialData = nullptr;
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceSprite;
 
-	Material* materialSpriteData = nullptr;
-
-	TransformationMatrix* transformationMatrixData_ = nullptr;
-
-	struct Transform {
-		Vector3 scale;
-		Vector3 rotate;
-		Vector3 translate;
-	};
+	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
 	Transform transformSprite{ {1.0f,1.0f,1.0f,},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+
 	Transform uvTransformSprite{
 		{1.0f,1.0f,1.0f},
 		{0.0f,0.0f,0.0f},
@@ -96,5 +89,10 @@ private:
 
 	
 
+	void CreateVertexData();
+
+	void CreateMaterialData();
+
+	void CreateTransformationMatrixData();
 };
 

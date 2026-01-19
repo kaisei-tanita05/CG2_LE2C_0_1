@@ -28,7 +28,8 @@
 #include "D3DResourceLeakChecker.h"
 #include "SpriteCommon.h"
 #include "Sprite.h"
-
+#include "Vector2.h"
+#include "Vector4.h"
 
 #include "extarnals/imgui//imgui.h"
 #include "extarnals/imgui/imgui_impl_dx12.h"
@@ -52,23 +53,13 @@ using namespace MatrixMath;
 
 #pragma region 構造体
 
-struct Vector2 {
-	float x;
-	float y;
-};
 
-struct Vector4 {
-	float x;
-	float y;
-	float z;
-	float w;
-};
 
-//struct VertexData {
-//	Vector4 position;
-//	Vector2 texcoord;
-//	Vector3 normal;
-//};
+struct VertexData {
+	Vector4 position;
+	Vector2 texcoord;
+	Vector3 normal;
+};
 
 struct Transform {
 	Vector3 scale;
@@ -709,7 +700,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 #pragma region 最初のシーンの初期化
 	Sprite* sprite = new Sprite();
-	sprite->Initialize();
+	sprite->Initialize(spriteCommon);
 #pragma endregion
 
 #ifdef _DEBUG
@@ -1407,12 +1398,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// 球描画
 		//transform.rotate.y += 0.03f;
 		Matrix4x4 worldMatrix = MakeAffine(transform.scale, transform.rotate, transform.translate);
-		wvpData->World = worldMatrix;
+		//sprite->wvpData->World = worldMatrix;
 		Matrix4x4 cameraMatrix = MakeAffine(cameraTransfrom.scale, cameraTransfrom.rotate, cameraTransfrom.translate);
 		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 		Matrix4x4 projectionMatrix = PerspectiveFov(0.45f, float(WinApp::kClientWidth) / float(WinApp::kClientHeight), 0.1f, 100.0f);
 		Matrix4x4 worldViewProjectionMatrix = Multipty(worldMatrix, Multipty(viewMatrix, projectionMatrix));
-		wvpData->WVP = worldViewProjectionMatrix;
+		//wvpData->WVP = worldViewProjectionMatrix;
 
 		//// Sprite
 		//Matrix4x4 worldMatrixSprite = MakeAffine(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
@@ -1485,7 +1476,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
 		uvTransformMatrix = Multipty(uvTransformMatrix, MakeRotateXMatrix(uvTransformSprite.rotate.z));
 		uvTransformMatrix = Multipty(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
-		materialSpriteData->uvTransform = uvTransformMatrix;
+		//materialSpriteData->uvTransform = uvTransformMatrix;
 
 #pragma endregion
 
@@ -1494,52 +1485,48 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// ImGuiの内部コマンドを生成する
 		ImGui::Render();
 
+		sprite->Update();
+
 		dxCommon->PreDraw();
 		
 		spriteCommon->SetCommonDrawing();
 
-
+		sprite->Draw();
 		//// rootSignatrueを設定。PSOに設定してるけど別途設定が必要
 		//dxCommon->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
 		//dxCommon->GetCommandList()->SetPipelineState(graphicsPipelineState.Get()); //PSOを設定
-		dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewSphere); // VBVを設定
-		dxCommon->GetCommandList()->IASetIndexBuffer(&indexBufferViewSphere);
+		
 
 		// 形状を設定。PSOに設定しているものとは別。同じものを設定すると考えておけば良い
 		//dxCommon->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 #pragma region sphereの描画
 		// wvp用のCBufferの場所を設定
-		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
-		dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
-		// マテリアルCBuffer
-		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-		//平行光源用CBufferの場所を設定
-		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-
-		dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-
-		// 描画！(DraoCall/ドローコール)。3頂点で1つのインスタンス。インスタンスについては今後
-		//xCommon->GetCommandList()->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
-		dxCommon->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
-#pragma endregion
-
-
-		// Spriteの描画
-		dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
-		dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewSprite); // VBVを設定
-		// マテリアルCBuffer
-		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
-		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
-
-		// 描画！(DraoCall/ドローコール)
-		dxCommon->GetCommandList()->DrawInstanced(6, 1, 0, 0);
-
-
-		dxCommon->GetCommandList()->IASetIndexBuffer(&indexBufferViewSprite);//IBVを設定
-
-		//描画!(DrawCall/ドローコー)6個のインデックスを使用し1つのインスタンスを描画。その他は当面0で良い
-		dxCommon->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
+//		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+//		dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
+//		// マテリアルCBuffer
+//		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+//		//平行光源用CBufferの場所を設定
+//		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+//
+//		dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+//
+//		// 描画！(DraoCall/ドローコール)。3頂点で1つのインスタンス。インスタンスについては今後
+//		//xCommon->GetCommandList()->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
+//		dxCommon->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+//#pragma endregion
+//
+//
+//		
+//
+//		// 描画！(DraoCall/ドローコール)
+//		dxCommon->GetCommandList()->DrawInstanced(6, 1, 0, 0);
+//
+//
+//		dxCommon->GetCommandList()->IASetIndexBuffer(&indexBufferViewSprite);//IBVを設定
+//
+//		//描画!(DrawCall/ドローコー)6個のインデックスを使用し1つのインスタンスを描画。その他は当面0で良い
+//		dxCommon->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 
 		// 実際のcommandListのImGuiの描画コマンドを積む
