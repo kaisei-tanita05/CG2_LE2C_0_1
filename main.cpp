@@ -950,7 +950,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	std::mt19937 randomEngine(seeGenerator());
 
 	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
-	
+
 
 #pragma endregion
 
@@ -1634,7 +1634,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3D12_INDEX_BUFFER_VIEW instancingIndexBufferView{};
 	// 使用するリソースのサイズはインデックス6つ分のサイズ
 	instancingIndexBufferView.SizeInBytes = sizeof(uint32_t) * 6;
-    Microsoft::WRL::ComPtr<ID3D12Resource> instancingIndexResource = CreateBufferResource(device, instancingIndexBufferView.SizeInBytes);
+	Microsoft::WRL::ComPtr<ID3D12Resource> instancingIndexResource = CreateBufferResource(device, instancingIndexBufferView.SizeInBytes);
 	// インデックスはuint32_tで表す
 	instancingIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
 
@@ -1660,7 +1660,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	instancingVertexData[3].normal = { 0.0f, 0.0f, 1.0f };
 
 	instancingVertexData[4].position = { -1.0f, 1.0f, 0.0f, 1.0f };
-	instancingVertexData[4].texcoord = {1.0f, 0.0f };
+	instancingVertexData[4].texcoord = { 1.0f, 0.0f };
 	instancingVertexData[4].normal = { 0.0f, 0.0f, 1.0f };
 
 	instancingVertexData[5].position = { -1.0f, -1.0f, 0.0f, 1.0f };
@@ -2026,7 +2026,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// ゲームの処理
 
-			
+
 
 			// これから書き込むバックバッファのインデックスを取得
 			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
@@ -2081,7 +2081,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				instancingData[index].WVP = worldViewProjectionMatrix;
 				instancingData[index].World = worldMatrix;
 				particles[index].transform.translate += particles[index].velocity * kDeltaTime;
-				particles[index].transform.translate = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
+				particles[index].velocity = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
 			}
 
 			//Obj用
@@ -2307,60 +2307,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #pragma region オブジェクトを解放
 
 	CloseHandle(fenceEvent);
-	/*fence->6();
-	rtvDescriptorHeap->Release();
-	swapChainResources[0]->Release();
-	swapChainResources[1]->Release();
-	swapChain->Release();
-	commandList->Release();
-	commandAllocator->Release();
-	commandQueue->Release();
-	device->Release();
-	useAdapter->Release();
-	dxgiFactory->Release();
-	vertexResource->Release();
-	graphicsPinelineState->Release();
-	signatrueBlob->Release();
-	if (errorBlob) {
-		errorBlob->Release();
-	}
-	rootSignatrue->Release();
-	pixelShaderBlob->Release();
-	vertexShaderBlob->Release();
-	materialResource->Release();
-	wvpResource->Release();
-	srvDescriptorHeap->Release();
-	mipImages.Release();
-	textureResource->Release();
-	intermediateResource->Release();
-	depthStencilResource->Release();
-	dsvDescriptorHaap->Release();
-	vertexResourceSprite->Release();
-	transformationMatrixResourceSprite->Release();
-	vertexResourceSphere->Release();
-	textureResource2->Release();
-	intermediateResource2->Release();
-	materialResourceSprite->Release();
-	directionalLightResource->Release();
-	indexResourceSprite->Release();
-	indexResourceSphere->Release();*/
-	//transformationMatrixResourceSphere->Release();
 
 #ifdef _DEBUG
 
-	//debugController->Release();
-
 #endif // _DEBUG
 	CloseWindow(hwnd);
-
-	// リソースリークチェック
-	/*Microsoft::WRL::ComPtr<IDXGIDebug1> debug;
-	if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
-		debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
-		debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
-		debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
-		debug->Release();
-	}*/
 #pragma endregion
 
 	//xAudio2解放
