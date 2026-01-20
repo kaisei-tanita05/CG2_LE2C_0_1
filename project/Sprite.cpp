@@ -20,6 +20,7 @@ void Sprite::Initialize(SpriteCommon* spriteCommon)
 
 }
 
+
 void Sprite::Update() {
 
 
@@ -52,6 +53,8 @@ void Sprite::Update() {
 	Matrix4x4 worldMatrix = MakeAffine(transform.scale, transform.rotate, transform.translate);
 	Matrix4x4 viewMatrix = MakeIdentity4x4();
 	Matrix4x4 projectionMatrix = Orthographic(0.0f, 0.0f, float(WinApp::kClientWidth), float(WinApp::kClientHeight), 0.0f, 100.0f);
+	transform.translate = { position.x,position.y,0.0f };
+	transform.rotate = { 0.0f,0.0f,rotation };
 	transformationMatrixData->WVP = Multipty(worldMatrix, Multipty(viewMatrix, projectionMatrix));
 	transformationMatrixData->World = worldMatrix;
 

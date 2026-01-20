@@ -1,5 +1,6 @@
 #include "Matrix4x4.h"
 #include "Matrix3x3.h"
+#include "Vector2.h"
 #include <Windows.h>
 #include <cstdint>
 #include <string>
@@ -1452,6 +1453,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::Render();
 
 		sprite->Update();
+
+		Vector2 position = sprite->GetPosition();
+
+		position += Vector2{ 0.1f,0.1f };
+
+		sprite->SetPosition(position);
+
+		//角度を変化させるテスト
+		float rotation = sprite->GetRotation();
 
 		dxCommon->PreDraw();
 		

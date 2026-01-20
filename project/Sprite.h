@@ -50,6 +50,16 @@ public://メンバ関数
 	void Update();
 
 	void Draw();
+
+	//getter
+	const Vector2& GetPosition()const { return position; }
+
+	//setter
+	void SetPosition(const Vector2& position) { this->position = position; }
+
+	float GetRotation()const { return rotation; }
+
+	void SetRotation(float rotation) { this->rotation = rotation; }
 private:
 	SpriteCommon* spriteCommon = nullptr;
 
@@ -94,5 +104,9 @@ private:
 	void CreateMaterialData();
 
 	void CreateTransformationMatrixData();
+
+	Vector2 position = { 0.0f,0.0f };
+
+	float rotation = 0.0f;
 };
 
