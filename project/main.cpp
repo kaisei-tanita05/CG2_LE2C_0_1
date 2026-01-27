@@ -319,7 +319,7 @@ std::string ConvertString(const std::wstring& str) {
 
 #pragma region objファイルを読み込む関数
 
-MaterialData LoadMaterialTemplateFile(const std::string & directoryPath, const std::string & filename)
+MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
 {
 	//1.中で必要となる変数の宣言
 	MaterialData materialData;//構築するMaterialData
@@ -346,7 +346,7 @@ MaterialData LoadMaterialTemplateFile(const std::string & directoryPath, const s
 	return materialData;
 }
 
-ModelData LoadObjFile(const std::string & directoryPath, const std::string & filename)
+ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename)
 {
 	//1.中で必要となる変数の宣言
 	ModelData modelData;//構築するModelData
@@ -587,7 +587,7 @@ SoundData SoundLoadWave(const char* filename)
 	return soundData;
 }
 
-void SoundUnload(SoundData * soundData)
+void SoundUnload(SoundData* soundData)
 {
 	delete[] soundData->pBuffer;
 
@@ -637,6 +637,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	winApp->Initialize();
 
+
+	DirectXCommon* dxCommon = nullptr;
+
+	//DirectXの初期化
+	dxCommon = new DirectXCommon();
+
+	dxCommon->Initialize(winApp);
+
+	SpriteCommon* spriteCommon = nullptr;
+
+	//スプライト共通部の初期化
+	spriteCommon = new SpriteCommon;
+	spriteCommon->Initialize(dxCommon);
+
 #pragma endregion
 
 #pragma region log
@@ -671,19 +685,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 #pragma region DirectX12を初期化しよう
 
-
-	DirectXCommon* dxCommon = nullptr;
-
-	//DirectXの初期化
-	dxCommon = new DirectXCommon();
-
-	dxCommon->Initialize(winApp);
-
-	SpriteCommon* spriteCommon = nullptr;
-
-	//スプライト共通部の初期化
-	spriteCommon = new SpriteCommon;
-	spriteCommon->Initialize(dxCommon);
 	//音声読み込み
 	SoundData soundData1 = SoundLoadWave("resources/fanfare.wav");
 
@@ -700,8 +701,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #pragma endregion
 
 #pragma region 最初のシーンの初期化
-	Sprite* sprite = new Sprite();
-	sprite->Initialize(spriteCommon);
+	//Sprite* sprite = new Sprite();
+	std::vector<Sprite*> sprites;
+	for (uint32_t i = 0; i < 5; ++i) {
+		Sprite* sprite = new Sprite();
+		sprite->Initialize(spriteCommon);
+		sprites.push_back(sprite);
+		sprite->SetPosition({ 50.0f + 120.0f * i,50.0f });
+	}
 #pragma endregion
 
 
@@ -1253,41 +1260,41 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 #pragma region WVP
 
-//	// WVB用のリソースを作る。Matrix4x4 一つ分のサイズを用意する
-//	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource = dxCommon->CreateBufferResource(sizeof(TransformationMatrix));
-//
-//	TransformationMatrix* wvpData = nullptr;
-//
-//	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
-//
-//
-//	// 単位行列を書き込んでおく
-//	wvpData->WVP = MakeIdentity4x4();
-//
-//
-//
-//
-//#pragma endregion
-//
-//#pragma region Sprite用のマテリアル
-//
-//	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceSprite = dxCommon->CreateBufferResource(sizeof(Material));
-//
-//	Material* materialSpriteData = nullptr;
-//
-//	materialResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&materialSpriteData));
-//
-//	materialSpriteData->uvTransform = MakeIdentity4x4();
-//
-//
-//	*materialSpriteData = {};
-//
-//	materialSpriteData->color = Vector4{ 1.0f,1.0f,1.0f,1.0f };
-//
-//
-//	//SpriteはLightingしないのでfalseを設定する
-//
-//	materialSpriteData->enableLighting = false;
+	//	// WVB用のリソースを作る。Matrix4x4 一つ分のサイズを用意する
+	//	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource = dxCommon->CreateBufferResource(sizeof(TransformationMatrix));
+	//
+	//	TransformationMatrix* wvpData = nullptr;
+	//
+	//	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
+	//
+	//
+	//	// 単位行列を書き込んでおく
+	//	wvpData->WVP = MakeIdentity4x4();
+	//
+	//
+	//
+	//
+	//#pragma endregion
+	//
+	//#pragma region Sprite用のマテリアル
+	//
+	//	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceSprite = dxCommon->CreateBufferResource(sizeof(Material));
+	//
+	//	Material* materialSpriteData = nullptr;
+	//
+	//	materialResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&materialSpriteData));
+	//
+	//	materialSpriteData->uvTransform = MakeIdentity4x4();
+	//
+	//
+	//	*materialSpriteData = {};
+	//
+	//	materialSpriteData->color = Vector4{ 1.0f,1.0f,1.0f,1.0f };
+	//
+	//
+	//	//SpriteはLightingしないのでfalseを設定する
+	//
+	//	materialSpriteData->enableLighting = false;
 
 
 
@@ -1350,7 +1357,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// 開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の処理に置き換える
 		ImGui::ShowDemoWindow();
 
-		
+
 
 		//input->Update();
 
@@ -1452,26 +1459,49 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// ImGuiの内部コマンドを生成する
 		ImGui::Render();
 
-		sprite->Update();
+		for (Sprite* sprite : sprites) {
+			sprite->Update();
+			Vector2 position = sprite->GetPosition();
 
-		Vector2 position = sprite->GetPosition();
+			//position += Vector2{ 0.1f,0.1f };
 
-		position += Vector2{ 0.1f,0.1f };
+			sprite->SetPosition(position);
+			//角度を変化させるテスト
+			float rotation = sprite->GetRotation();
 
-		sprite->SetPosition(position);
+			//rotation +=0.01f;
+			sprite->SetRotation(rotation);
 
-		//角度を変化させるテスト
-		float rotation = sprite->GetRotation();
+			//色を変化させるテスト
+			Vector4 color = sprite->GetColor();
+			color.x += 0.01f;
+			if (color.x > 1.0f) {
+				color.x -= 1.0f;
+			}
+			sprite->SetColor(color);
+
+			Vector2 size = sprite->GetSize();
+			size.x += 0.1f;
+			size.y += 0.1f;
+			sprite->SetSize(size);
+
+		}
+
+
+
 
 		dxCommon->PreDraw();
-		
+
 		spriteCommon->SetCommonDrawing();
 
-		sprite->Draw();
+
+		for (Sprite* sprite : sprites) {
+			sprite->Draw();
+		}
 		//// rootSignatrueを設定。PSOに設定してるけど別途設定が必要
 		//dxCommon->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
 		//dxCommon->GetCommandList()->SetPipelineState(graphicsPipelineState.Get()); //PSOを設定
-		
+
 
 		// 形状を設定。PSOに設定しているものとは別。同じものを設定すると考えておけば良い
 		//dxCommon->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -1549,7 +1579,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//Log(logStream, "HelloWored\n");
 	//Log(logStream, ConvertString(std::format(L"WSTRING{}\n", WinApp::kClientWidth)));
 
-	delete sprite;
+	for (Sprite* sprite : sprites) {
+		delete sprite;
+	}
 
 	delete spriteCommon;
 
