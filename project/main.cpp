@@ -1480,13 +1480,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			sprite->Update();
 			Vector2 position = sprite->GetPosition();
 
-			//position += Vector2{ 0.1f,0.1f };
+			position += Vector2{ 0.1f,0.1f };
 
 			sprite->SetPosition(position);
 			//角度を変化させるテスト
 			float rotation = sprite->GetRotation();
 
-			//rotation +=0.01f;
+			rotation +=0.01f;
 			sprite->SetRotation(rotation);
 
 			//色を変化させるテスト
