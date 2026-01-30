@@ -29,8 +29,8 @@
 #include "D3DResourceLeakChecker.h"
 #include "SpriteCommon.h"
 #include "Sprite.h"
-#include "Vector2.h"
 #include "Vector4.h"
+#include "TextureManager.h"
 
 #include "extarnals/imgui//imgui.h"
 #include "extarnals/imgui/imgui_impl_dx12.h"
@@ -645,6 +645,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	dxCommon->Initialize(winApp);
 
+	//テクスチャマネージャーの初期化
+	TextureManager::GetInstance()->Initialize(dxCommon);
+	
+
 	SpriteCommon* spriteCommon = nullptr;
 
 	//スプライト共通部の初期化
@@ -701,35 +705,48 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #pragma endregion
 
 #pragma region 最初のシーンの初期化
+	std::vector<std::string> textures = {
+	"resources/uvChecker.png",
+	"resources/monsterball.png"
+	};
+
 	//Sprite* sprite = new Sprite();
 	std::vector<Sprite*> sprites;
 	for (uint32_t i = 0; i < 5; ++i) {
 		Sprite* sprite = new Sprite();
-		sprite->Initialize(spriteCommon);
+		// 2つの画像を交互に割り当てるために、i % 2でインデックスを切り替え
+		std::string& textureFile = textures[i % 2];
+		sprite->Initialize(spriteCommon, textureFile);
+		/*sprite->Initialize(spriteCommon, textureFile);
+		sprite->SetIsFlipX(false);
+		sprite->SetIsFlipY(false);
+		sprite->SetTextureLeftTop({ 0.0f, 0.0f });
+		sprite->SetTextureSize({ 64.0f, 64.0f });*/
+		sprite->SetSize({ 64.0f, 64.0f });
+		sprite->SetPosition({ 100.0f + i * 200.0f, 100.0f });
 		sprites.push_back(sprite);
-		sprite->SetPosition({ 50.0f + 120.0f * i,50.0f });
 	}
 #pragma endregion
 
 
 #pragma region DescriptorSize
-	//2枚目のTextureを読んで転送する
-	DirectX::ScratchImage mipImages2 = dxCommon->LoadTexture("resources/monsterBall.png");
+	////2枚目のTextureを読んで転送する
+	//DirectX::ScratchImage mipImages2 = dxCommon->LoadTexture(d"resources/monsterBall.png");
 
-	const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
+	//const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource2 = dxCommon->CreateTextureResource(metadata2).Get();
-	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource2 = dxCommon->UploadTextureData(textureResource2, mipImages2);
+	//Microsoft::WRL::ComPtr<ID3D12Resource> textureResource2 = dxCommon->CreateTextureResource(metadata2).Get();
+	//Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource2 = dxCommon->UploadTextureData(textureResource2, mipImages2);
 
 
-	//2枚目のSRVを作る
-	//metaDataを基にSRVの設定
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2{};
+	////2枚目のSRVを作る
+	////metaDataを基にSRVの設定
+	//D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2{};
 
-	srvDesc2.Format = metadata2.format;
-	srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;//2Dテクスチャー
-	srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
+	//srvDesc2.Format = metadata2.format;
+	//srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	//srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;//2Dテクスチャー
+	//srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
 
 
 	//index=2の位置にDescriptorHeapを生成する
@@ -739,34 +756,34 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = dxCommon->GetSRVGPUDescriptorHandle(2);
 
 	//SRVを生成
-	dxCommon->GetDevice()->CreateShaderResourceView(textureResource2.Get(), &srvDesc2, textureSrvHandleCPU2);
+	//dxCommon->GetDevice()->CreateShaderResourceView(textureResource2.Get(), &srvDesc2, textureSrvHandleCPU2);
 #pragma endregion
 
 
 
 
 
-	// Textrueを読んで転送する
-	DirectX::ScratchImage mipImages = dxCommon->LoadTexture("resources/uvChecker.png");
-	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
-	Microsoft::WRL::ComPtr<ID3D12Resource> textureeResource = dxCommon->CreateTextureResource(metadata).Get();
-	//Update the code to correctly retrieve the raw pointer from the ComPtr.  
-	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = dxCommon->CreateTextureResource(metadata).Get();
-	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = dxCommon->UploadTextureData(textureResource, mipImages);
+	//// Textrueを読んで転送する
+	//DirectX::ScratchImage mipImages = dxCommon->LoadTexture("resources/uvChecker.png");
+	//const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
+	//Microsoft::WRL::ComPtr<ID3D12Resource> textureeResource = dxCommon->CreateTextureResource(metadata).Get();
+	////Update the code to correctly retrieve the raw pointer from the ComPtr.  
+	//Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = dxCommon->CreateTextureResource(metadata).Get();
+	//Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = dxCommon->UploadTextureData(textureResource, mipImages);
 
-	// metaDataを基にSRVの設定
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	srvDesc.Format = metadata.format;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D; // 2Dテクスチャ	
-	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
+	//// metaDataを基にSRVの設定
+	//D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	//srvDesc.Format = metadata.format;
+	//srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	//srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D; // 2Dテクスチャ	
+	//srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
 
 	//SRVを作成するDescriptorHeapの場所を決める
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = dxCommon->GetSRVCPUDescriptorHandle(1);
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = dxCommon->GetSRVGPUDescriptorHandle(1);
+	/*D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = dxCommon->GetSRVCPUDescriptorHandle(1);
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = dxCommon->GetSRVGPUDescriptorHandle(1);*/
 	//先頭はImguiが使っているのでその次を使
 	//SRVの生成
-	dxCommon->GetDevice()->CreateShaderResourceView(textureResource.Get(), &srvDesc, textureSrvHandleCPU);
+	//dxCommon->GetDevice()->CreateShaderResourceView(textureResource.Get(), &srvDesc, textureSrvHandleCPU);
 
 	//DSVの設定
 
@@ -1498,6 +1515,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		for (Sprite* sprite : sprites) {
 			sprite->Draw();
 		}
+
+		
 		//// rootSignatrueを設定。PSOに設定してるけど別途設定が必要
 		//dxCommon->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
 		//dxCommon->GetCommandList()->SetPipelineState(graphicsPipelineState.Get()); //PSOを設定
@@ -1544,6 +1563,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 		dxCommon->PostDraw();
+
+		TextureManager::GetInstance()->ReleaseIntermediateResources();
 	}
 
 	// ImGuiの終了処理
@@ -1579,11 +1600,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//Log(logStream, "HelloWored\n");
 	//Log(logStream, ConvertString(std::format(L"WSTRING{}\n", WinApp::kClientWidth)));
 
+	//テクスチャマネージャーの終了
+	TextureManager::GetInstance()->Finalize();
+
 	for (Sprite* sprite : sprites) {
 		delete sprite;
 	}
 
 	delete spriteCommon;
+
+
 
 	winApp->Finalize();
 

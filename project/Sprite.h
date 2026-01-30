@@ -8,7 +8,7 @@
 class SpriteCommon;
 
 
-
+class TextureManager;
 
 
 
@@ -45,7 +45,7 @@ class Sprite
 
 public://メンバ関数
 	//初期化
-	void Initialize(SpriteCommon* spriteCommon);
+	void Initialize(SpriteCommon* spriteCommon, std::string textureFilePath);
 
 	void Update();
 
@@ -118,5 +118,8 @@ private:
 	float rotation = 0.0f;
 
 	Vector2 size = { 640.0f,360.0f };
+
+	//テクスチャ番号
+	uint32_t textureIndex = 0;
 };
 

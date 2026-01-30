@@ -1,9 +1,10 @@
 #include "Sprite.h"
 #include "SpriteCommon.h"
+#include "TextureManager.h"
 
 using namespace MatrixMath;
 
-void Sprite::Initialize(SpriteCommon* spriteCommon)
+void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 {
 
 	//引数を受け取ってメンバ変数に記録する
@@ -17,7 +18,10 @@ void Sprite::Initialize(SpriteCommon* spriteCommon)
 
 	CreateTransformationMatrixData();
 	
+	TextureManager::GetInstance()->LoadTexture(textureFilePath);
 
+	//単位行列を書き込んでおく
+	textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
 }
 
 
@@ -71,8 +75,8 @@ void Sprite::Draw()
 	dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 	dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
 
-	dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, dxCommon->GetSRVGPUDescriptorHandle(1));
-
+	//dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, dxCommon->GetSRVGPUDescriptorHandle(1));
+	dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureIndex));
 	//描画!(DrawCall/ドローコー)6個のインデックスを使用し1つのインスタンスを描画。その他は当面0で良い
 	dxCommon->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
