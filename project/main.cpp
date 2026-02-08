@@ -31,6 +31,8 @@
 #include "Sprite.h"
 #include "Vector4.h"
 #include "TextureManager.h"
+#include "Object3d.h"
+#include "Object3dCommon.h"
 
 #include "extarnals/imgui//imgui.h"
 #include "extarnals/imgui/imgui_impl_dx12.h"
@@ -655,6 +657,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	spriteCommon = new SpriteCommon;
 	spriteCommon->Initialize(dxCommon);
 
+	Object3dCommon* object3dCommon = nullptr;
+	//3Dオブジェクト共通部の初期化
+	object3dCommon = new Object3dCommon;
+	object3dCommon->Initialize(dxCommon);
+
 #pragma endregion
 
 #pragma region log
@@ -726,6 +733,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		sprite->SetPosition({ 100.0f + i * 200.0f, 100.0f });
 		sprites.push_back(sprite);
 	}
+
+
+	Object3d* object3d = new Object3d();
+	object3d->Initialize();
 #pragma endregion
 
 
@@ -1553,6 +1564,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 //		//描画!(DrawCall/ドローコー)6個のインデックスを使用し1つのインスタンスを描画。その他は当面0で良い
 //		dxCommon->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
+		//3Dオブジェクトの描画準備。3Dオブジェクトの描画に共通のグラフィックスコマンドを積む
+		object3dCommon->SetCommonDrawing();
+
 
 		// 実際のcommandListのImGuiの描画コマンドを積む
 		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());
@@ -1609,7 +1623,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	delete spriteCommon;
 
-
+	delete object3d;
+	delete object3dCommon;
 
 	winApp->Finalize();
 
