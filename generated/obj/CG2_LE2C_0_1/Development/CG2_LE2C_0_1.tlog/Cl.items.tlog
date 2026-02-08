@@ -1,3 +1,5 @@
+C:\Project\CG2_LE2C_0_1\project\D3DResourceLeakChecker.cpp;C:\Project\CG2_LE2C_0_1\generated\obj\CG2_LE2C_0_1\Development\D3DResourceLeakChecker.obj
+C:\Project\CG2_LE2C_0_1\project\DirectXCommon.cpp;C:\Project\CG2_LE2C_0_1\generated\obj\CG2_LE2C_0_1\Development\DirectXCommon.obj
 C:\Project\CG2_LE2C_0_1\project\extarnals\imgui\imgui.cpp;C:\Project\CG2_LE2C_0_1\generated\obj\CG2_LE2C_0_1\Development\imgui.obj
 C:\Project\CG2_LE2C_0_1\project\extarnals\imgui\imgui_demo.cpp;C:\Project\CG2_LE2C_0_1\generated\obj\CG2_LE2C_0_1\Development\imgui_demo.obj
 C:\Project\CG2_LE2C_0_1\project\extarnals\imgui\imgui_draw.cpp;C:\Project\CG2_LE2C_0_1\generated\obj\CG2_LE2C_0_1\Development\imgui_draw.obj
@@ -5,5 +7,12 @@ C:\Project\CG2_LE2C_0_1\project\extarnals\imgui\imgui_impl_dx12.cpp;C:\Project\C
 C:\Project\CG2_LE2C_0_1\project\extarnals\imgui\imgui_impl_win32.cpp;C:\Project\CG2_LE2C_0_1\generated\obj\CG2_LE2C_0_1\Development\imgui_impl_win32.obj
 C:\Project\CG2_LE2C_0_1\project\extarnals\imgui\imgui_tables.cpp;C:\Project\CG2_LE2C_0_1\generated\obj\CG2_LE2C_0_1\Development\imgui_tables.obj
 C:\Project\CG2_LE2C_0_1\project\extarnals\imgui\imgui_widgets.cpp;C:\Project\CG2_LE2C_0_1\generated\obj\CG2_LE2C_0_1\Development\imgui_widgets.obj
+C:\Project\CG2_LE2C_0_1\project\Input.cpp;C:\Project\CG2_LE2C_0_1\generated\obj\CG2_LE2C_0_1\Development\Input.obj
+C:\Project\CG2_LE2C_0_1\project\Logger.cpp;C:\Project\CG2_LE2C_0_1\generated\obj\CG2_LE2C_0_1\Development\Logger.obj
 C:\Project\CG2_LE2C_0_1\project\main.cpp;C:\Project\CG2_LE2C_0_1\generated\obj\CG2_LE2C_0_1\Development\main.obj
 C:\Project\CG2_LE2C_0_1\project\Matrix4x4.cpp;C:\Project\CG2_LE2C_0_1\generated\obj\CG2_LE2C_0_1\Development\Matrix4x4.obj
+C:\Project\CG2_LE2C_0_1\project\Sprite.cpp;C:\Project\CG2_LE2C_0_1\generated\obj\CG2_LE2C_0_1\Development\Sprite.obj
+C:\Project\CG2_LE2C_0_1\project\SpriteCommon.cpp;C:\Project\CG2_LE2C_0_1\generated\obj\CG2_LE2C_0_1\Development\SpriteCommon.obj
+C:\Project\CG2_LE2C_0_1\project\StringUtility.cpp;C:\Project\CG2_LE2C_0_1\generated\obj\CG2_LE2C_0_1\Development\StringUtility.obj
+C:\Project\CG2_LE2C_0_1\project\TextureManager.cpp;C:\Project\CG2_LE2C_0_1\generated\obj\CG2_LE2C_0_1\Development\TextureManager.obj
+C:\Project\CG2_LE2C_0_1\project\WinApp.cpp;C:\Project\CG2_LE2C_0_1\generated\obj\CG2_LE2C_0_1\Development\WinApp.obj
