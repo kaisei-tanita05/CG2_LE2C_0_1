@@ -24,7 +24,7 @@
 #include <dinput.h>
 #include "Input.h"
 #include "WinApp.h"
-#include "DirectXCommon.h"
+//#include "DirectXCommon.h"
 #include "StringUtility.h"
 #include "D3DResourceLeakChecker.h"
 #include "SpriteCommon.h"
@@ -70,8 +70,8 @@ struct Transform {
 	Vector3 translate;
 };
 // Transform変数を作る
-Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-Transform cameraTransfrom{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
+//Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+//Transform cameraTransfrom{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
 Transform transformSprite{ {1.0f,1.0f,1.0f,},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 Transform uvTransformSprite{
 	{1.0f,1.0f,1.0f},
@@ -736,7 +736,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 	Object3d* object3d = new Object3d();
-	object3d->Initialize();
+	object3d->Initialize(object3dCommon);
 #pragma endregion
 
 

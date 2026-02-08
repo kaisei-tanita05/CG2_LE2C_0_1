@@ -1,5 +1,4 @@
 #include "Object3dCommon.h"
-#include "DirectXCommon.h"
 
 void Object3dCommon::Initialize(DirectXCommon* dxCommon)
 {
